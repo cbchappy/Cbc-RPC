@@ -16,10 +16,26 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- 2.1.2版本以上支持纯净版客户端 -->
+<!--        <nacos.version>2.4.2</nacos.version>-->
+        <nacos.version>1.4.1</nacos.version>
     </properties>
 
     <dependencies>
 
+        <!--common模块-->
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>rpc-common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+
+        <!--nacos-->
+        <dependency>
+            <groupId>com.alibaba.nacos</groupId>
+            <artifactId>nacos-client</artifactId>
+            <version>${nacos.version}</version>
+        </dependency>
     </dependencies>
 
 
