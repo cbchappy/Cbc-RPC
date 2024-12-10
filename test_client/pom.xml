@@ -8,31 +8,22 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.example</groupId>
-    <artifactId>test-client</artifactId>
+    <artifactId>test_client</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>test-client</name>
-    <description>test-client</description>
-
+    <name>test_client</name>
+    <description>test_client</description>
 
     <properties>
         <java.version>17</java.version>
-        <!-- 2.1.2版本以上支持纯净版客户端 -->
-        <nacos.version>2.4.2</nacos.version>
     </properties>
 
     <dependencies>
-
-        <!--自定义client-->
         <dependency>
             <groupId>com.example</groupId>
             <artifactId>rpc-client</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
-
     </dependencies>
-
-
 
 
 </project>

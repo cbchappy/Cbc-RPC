@@ -1,5 +1,7 @@
 package com.example.rpccommon.serializer;
 
+import com.example.rpccommon.constants.RpcExceptionMsg;
+import com.example.rpccommon.constants.SerializerCode;
 import com.example.rpccommon.exception.RpcCommonException;
 import com.example.rpccommon.exception.RpcException;
 import com.example.rpccommon.exception.RpcRequestException;
@@ -24,32 +26,18 @@ public abstract class RpcSerializer {
         if(map.containsKey(code)){
             return map.get(code);
         }
-        if(code == SerializerCode.JDK.code){
+        if(code == SerializerCode.JDK){
             map.put(code, new JavaSerializer());
-        } else if (code == SerializerCode.HESSIAN.code) {
+        } else if (code == SerializerCode.HESSIAN) {
             map.put(code, new HessianSerializer());
-        } else if (code == SerializerCode.JSON.code) {
+        } else if (code == SerializerCode.JSON) {
             map.put(code, new JsonSerializer());
         }else {
-            throw new RpcCommonException(RpcException.RpcExceptionMsg.SERIALIZER_NOTFOUND.getMsg());
+            throw new RpcCommonException(RpcExceptionMsg.SERIALIZER_NOTFOUND);
         }
         return map.get(code);
     }
 
-
-    public enum SerializerCode {
-        JDK(0),
-        JSON(1),
-        HESSIAN(2),
-        ;
-        private final int code;
-        SerializerCode(int code) {
-            this.code = code;
-        }
-        public Integer getCode(){
-            return code;
-        }
-    }
 
 
 

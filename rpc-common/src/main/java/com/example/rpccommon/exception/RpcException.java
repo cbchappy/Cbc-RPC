@@ -21,19 +21,4 @@ public class RpcException extends RuntimeException{
         super(cause);
     }
 
-    public enum RpcExceptionMsg{
-        SERIALIZER_NOTFOUND("无法找到序列化器"),
-        VERIFY_ERROR("消息解码校验不通过"),
-        ;
-
-        private final String msg;
-
-        RpcExceptionMsg(String msg) {
-            this.msg = msg;
-        }
-
-        public String getMsg() {
-            return msg;
-        }
-    }
 }

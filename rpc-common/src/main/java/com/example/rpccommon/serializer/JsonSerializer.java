@@ -2,6 +2,7 @@ package com.example.rpccommon.serializer;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.example.rpccommon.message.PingMsg;
 import com.example.rpccommon.message.Request;
 import com.example.rpccommon.message.Response;
 
@@ -36,9 +37,11 @@ public class JsonSerializer extends RpcSerializer {
 
         if (jo.getInnerMap().containsKey("status")) {
             return deSerializedResponse(jo);
+        } else if (jo.getInnerMap().containsKey("msgId")) {
+            return deSerializedRequest(jo);
         }
 
-        return deSerializedRequest(jo);
+       return jo.toJavaObject(PingMsg.class);
     }
 
     private static Response deSerializedResponse(JSONObject jo) {

@@ -14,10 +14,6 @@ import io.netty.buffer.ByteBuf;
 public class RpcUtil {
 
     public static void verifyMsg(ByteBuf buf){
-        if(buf.readInt() != ProtocolConfig.getMagic()){
-            throw new RpcCommonException(RpcException.RpcExceptionMsg.VERIFY_ERROR.getMsg());
-        } else if (buf.readByte() != ProtocolConfig.getVersion()) {
-            throw new RpcCommonException(RpcException.RpcExceptionMsg.VERIFY_ERROR.getMsg());
-        }
+
     }
 }

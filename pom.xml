@@ -14,8 +14,7 @@
         <module>rpc-common</module>
         <module>rpc-client</module>
         <module>rpc-server</module>
-        <module>test-client</module>
-        <module>test-server</module>
+        <module>test_server</module>
     </modules>
 
     <properties>

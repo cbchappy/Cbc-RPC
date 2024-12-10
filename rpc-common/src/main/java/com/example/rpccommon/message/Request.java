@@ -28,9 +28,8 @@ public class Request extends RpcMsg{
         this.methodName = builder.methodName;
         perfectRequest(this);
     }
-    private final static AtomicInteger generateId = new AtomicInteger(0);
 
-    private Integer serializationId;
+    private Integer msgId;
 
     private String interfaceName;
 
@@ -40,14 +39,11 @@ public class Request extends RpcMsg{
 
    private String[] argsClassNames;//json序列化必需
 
-    //生成唯一id, 辨别唯一请求
-    private static Integer generateId(){
-        return generateId.incrementAndGet();
-    }
+
 
     //完善Request的参数
     private static void perfectRequest(Request request){
-        request.serializationId = generateId();
+        request.msgId = generateId();
         Object[] a = request.args;
         if(a != null){
             request.argsClassNames = new String[a.length];

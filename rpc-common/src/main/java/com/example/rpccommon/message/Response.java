@@ -22,7 +22,7 @@ public class Response extends RpcMsg{
     }
 
 
-    private Integer serializationId;
+    private Integer msgId;
 
     private Integer status;
 
