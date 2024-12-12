@@ -23,6 +23,7 @@ public class JsonSerializer extends RpcSerializer {
 
     @Override
     public byte[] serialize(Object obj) {
+        log.debug("json方式序列化");
         //转为json
         String s = JSON.toJSONString(obj);
 
@@ -31,6 +32,7 @@ public class JsonSerializer extends RpcSerializer {
 
     @Override
     public Object deSerialize(byte[] bytes) {
+        log.debug("json方式反序列化");
         String json = new String(bytes, StandardCharsets.UTF_8);
 
         JSONObject jo = JSON.parseObject(json);

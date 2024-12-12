@@ -3,6 +3,7 @@ package com.example.rpccommon.serializer;
 import com.caucho.hessian.io.Hessian2Input;
 import com.caucho.hessian.io.Hessian2Output;
 import com.caucho.hessian.io.HessianOutput;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -13,15 +14,18 @@ import java.io.IOException;
  * @DateTime 2024/12/8 12:20
  * @Description Hessian序列化
  */
+@Slf4j
 public class HessianSerializer extends RpcSerializer{
     @Override
     public byte[] serialize(Object obj) {
+        log.debug("Hessian方式序列化");
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         Hessian2Output hop = new Hessian2Output(bos);
         try {
             hop.writeObject(obj);
             hop.close();
         } catch (IOException e) {
+            log.error("序列化失败");
             throw new RuntimeException(e);
         }
 
@@ -30,6 +34,7 @@ public class HessianSerializer extends RpcSerializer{
 
     @Override
     public Object deSerialize(byte[] bytes) {
+        log.debug("Hessian方式反序列化");
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
         Hessian2Input hip = new Hessian2Input(bis);
         try {
@@ -37,6 +42,7 @@ public class HessianSerializer extends RpcSerializer{
             hip.close();
             return o;
         } catch (IOException e) {
+            log.error("反序列化成功");
             throw new RuntimeException(e);
         }
 

@@ -15,6 +15,7 @@ public enum ResponseStatus {
     ARGS_METHOD(402, "方法参数解析错误"),
     METHOD_NOT_FOUND(403, "请求调用的方法不存在"),
     SERVER_EXCEPTION(500, "服务端出现未知异常"),
+    SERVER_IMPL_NOT_FOUND(501, "服务端未存在接口的实现类"),
     SERIALIZATION(600, "服务端序列化器异常"),
     ;
     public final Integer code;

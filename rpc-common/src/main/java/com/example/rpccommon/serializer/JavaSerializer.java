@@ -1,5 +1,7 @@
 package com.example.rpccommon.serializer;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.*;
 
 /**
@@ -7,25 +9,30 @@ import java.io.*;
  * @DateTime 2024/12/7 19:12
  * @Description java原始字节序列化
  */
+@Slf4j
 public class JavaSerializer extends RpcSerializer{
     @Override
     public byte[] serialize(Object obj) {
+        log.debug("jdk方式序列化");
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try (ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(obj);
             return bos.toByteArray();
         }catch (IOException e){
             e.printStackTrace();
+            log.error("序列化失败");
             throw new RuntimeException("java字节流序列化出错");
         }
     }
 
     @Override
     public Object deSerialize(byte[] bytes) {
+        log.debug("jdk方式反序列化");
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
         try (ObjectInputStream ois = new ObjectInputStream(bis)) {
             return ois.readObject();
         }catch (Exception e){
+            log.error("反序列化失败");
             e.printStackTrace();
             throw new RuntimeException("java字节流反序列化出错");
         }

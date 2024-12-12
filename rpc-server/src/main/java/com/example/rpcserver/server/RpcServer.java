@@ -94,7 +94,11 @@ public class RpcServer {
     public static void openServiceImpl(Class<?> impLclass) throws IOException {
         String classPath = getClassPath(impLclass);
 
+
+
         Class<?>[] interfaces = impLclass.getInterfaces();
+
+        log.debug("进行ISP注册, 接口名:{}, 实现类名:{}", interfaces[0], impLclass);
 
         File dir = new File(classPath, "META-INF/services");
         if(!dir.exists()){

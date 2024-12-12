@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @Author Cbc
  * @DateTime 2024/12/10 12:20
- * @Description
+ * @Description 心跳包处理器
  */
 @Slf4j
 public class PingMsgHandler extends SimpleChannelInboundHandler<PingMsg> {

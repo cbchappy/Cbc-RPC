@@ -11,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @Author Cbc
  * @DateTime 2024/12/9 20:13
- * @Description 空闲事件处理器
+ * @Description 写空闲事件处理器
  */
 @Slf4j
 public class IdleStateEventHandler extends ChannelDuplexHandler {

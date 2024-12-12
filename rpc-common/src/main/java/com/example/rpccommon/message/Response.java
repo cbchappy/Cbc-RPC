@@ -1,7 +1,6 @@
 package com.example.rpccommon.message;
 
-import com.example.rpccommon.Entity;
-import com.example.rpccommon.serializer.JsonSerializer;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,6 +1,9 @@
 package com.example.rpcserver.config;
 
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.PropertySource;
+
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -8,10 +11,13 @@ import java.util.concurrent.TimeUnit;
  * @DateTime 2024/12/8 21:13
  * @Description
  */
+@ConfigurationProperties(prefix = "cbc.rpc")
 public class RegistryConfig {
     public final static String SERVER_ADDR = "localhost:8848";
 
-    public final static String REGISTRY_IP = "localhost";
+    public  String test;
+
+    public  static String REGISTRY_IP = "localhost";
 
     public final static Integer REGISTRY_PORT = 8080;
 

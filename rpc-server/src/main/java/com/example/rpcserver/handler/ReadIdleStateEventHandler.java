@@ -18,7 +18,7 @@ public class ReadIdleStateEventHandler extends ChannelDuplexHandler {
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
         if(idleStateEvent.state() == IdleState.READER_IDLE){
-            log.debug("触发读空闲, 进行关闭channel");
+            log.debug("触发读空闲, 进行关闭客户端channel");
             ctx.channel().close();
             return;
         }

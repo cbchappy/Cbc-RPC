@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RegistryHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        log.debug("Registered");
+        log.debug("接收到channel连接");
         ctx.channel().closeFuture().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {

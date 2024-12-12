@@ -14,9 +14,14 @@ import com.example.rpcclient.blance.RandomLoadBalance;
 import com.example.rpcclient.blance.RoundRobinLoadBalance;
 import com.example.rpcclient.blance.WeightLoadBalance;
 import com.example.rpcclient.config.ClientConfig;
+import com.example.rpcclient.constants.FaultTolerantCode;
 import com.example.rpcclient.handler.IdleStateEventHandler;
 import com.example.rpcclient.handler.ResponseHandler;
 import com.example.rpcclient.protocol.RpcClientMsgCodec;
+import com.example.rpcclient.tolerant.DoNothingFaultTolerant;
+import com.example.rpcclient.tolerant.FaultTolerant;
+import com.example.rpcclient.tolerant.RetryFaultTolerant;
+import com.example.rpcclient.tolerant.TestOtherFaultTolerant;
 import com.example.rpccommon.constants.RpcExceptionMsg;
 import com.example.rpccommon.exception.RpcException;
 import com.example.rpccommon.message.Request;
@@ -42,27 +47,29 @@ import static com.example.rpcclient.constants.LoadBalanceTypeCode.*;
 /**
  * @Author Cbc
  * @DateTime 2024/12/9 14:15
- * @Description 服务管理中心 //todo 注意考虑线程安全问题  先进行服务注册
+ * @Description 服务管理中心   管理所有网络连接 //todo 注意考虑线程安全问题  先进行服务注册
  */
 @Slf4j
 public class ServerCenter {
     //todo 容错处理
     //todo 更新instance也要更新channelMap 处理掉一些连接问题
-    private static final Map<Instance, Channel> channelMap = new ConcurrentHashMap<>();
+    private static final Map<Instance, Channel> channelMap = new ConcurrentHashMap<>();//根据实例存储channel 进行channel复用
 
     private static volatile NamingService namingService;//nacos总服务端
 
-    private static volatile List<Instance> instances;//服务实例
+    private static volatile List<Instance> instances;//获取到的所有服务实例
 
     //todo delete
-    public final static AtomicInteger all = new AtomicInteger(0);
+    public final static AtomicInteger all = new AtomicInteger(0);//计数
 
     //todo countMap
-    public final static Map<String, AtomicInteger> countMap = new ConcurrentHashMap<>(7);
+    public final static Map<String, AtomicInteger> countMap = new ConcurrentHashMap<>(7);//计数
 
-    private final static ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();//读写锁
+    private final static ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();//instances的读写锁
 
     private final static LoadBalance LOAD_BALANCE;//根据配置文件获取负载均衡实例
+
+    private final static FaultTolerant FAULT_TOLERANT;//根据配置文件获取容错处理实例
 
     static {
         if(RANDOM_LOAD_BALANCE == LOAD_BALANCE_CODE){
@@ -81,8 +88,22 @@ public class ServerCenter {
         }
     }//初始化负载均衡类
 
+    static {
+        if(FAULT_TOLERANT_CODE == FaultTolerantCode.DO_NOTHING){
+            FAULT_TOLERANT = new DoNothingFaultTolerant();
+        } else if (FAULT_TOLERANT_CODE == FaultTolerantCode.RETRY) {
+            FAULT_TOLERANT = new RetryFaultTolerant();
+        } else if (FAULT_TOLERANT_CODE == FaultTolerantCode.TEST_OTHER) {
+            FAULT_TOLERANT = new TestOtherFaultTolerant();
+        }else {
+            FAULT_TOLERANT = new TestOtherFaultTolerant();
+            throw new RpcException(RpcExceptionMsg.FAULT_TOLERANT_NOT_FOUND);
+        }
+    }//初始化容错处理类
+
     //服务发现 只启动一次
     private static void findServer() throws NacosException {
+        log.debug("启动服务发现");
 
         if(namingService == null){
 
@@ -96,22 +117,13 @@ public class ServerCenter {
                 properties.setProperty(PropertyKeyConst.USERNAME, ClientConfig.USERNAME);
 
                 namingService = NamingFactory.createNamingService(properties);
-                String[] strs = {"0", "1", "2", "3", "4"};
-                List<String> list = new ArrayList<>();
-                list.addAll(Arrays.asList(strs));
-                //instances = namingService.selectInstances(SERVER_NAME, SERVER_GROUP_NAME, SERVER_CLUSTER_NAME,true);
-                instances = namingService.selectInstances(SERVER_NAME, SERVER_GROUP_NAME, list,true);
-                listenServer();
-                log.debug("count:{}", instances.size());
-                try {
-                    Thread.sleep(2000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+
+                instances = namingService.selectInstances(SERVER_NAME, SERVER_GROUP_NAME, SERVER_CLUSTER_NAME,true);
+                log.debug("服务发现个数:{}", instances.size());
                 if(instances == null || instances.size() == 0){
                     throw new RpcException(RpcExceptionMsg.NOT_FOUND_SERVER);
                 }
-
+                listenServer();
 
             }
 
@@ -136,7 +148,7 @@ public class ServerCenter {
                     if(collect.size() == 0){
                         throw new RpcException(RpcExceptionMsg.NOT_FOUND_SERVER);
                     }
-                    log.debug("服务实例发生变化, 服务个数为:{}", collect.size() );
+                    log.debug("服务实例发生变化, 现有健康服务个数为:{}", collect.size() );
                     updateInstances(collect);
                 }
             }
@@ -145,11 +157,7 @@ public class ServerCenter {
                 return executorService;
             }
         };
-        String[] strs = {"0", "1", "2", "3", "4"};
-        List<String> list = new ArrayList<>();
-        list.addAll(Arrays.asList(strs));
-        //namingService.subscribe(SERVER_NAME, SERVER_GROUP_NAME, SERVER_CLUSTER_NAME, serviceListener);
-        namingService.subscribe(SERVER_NAME, SERVER_GROUP_NAME, list, serviceListener);
+        namingService.subscribe(SERVER_NAME, SERVER_GROUP_NAME, SERVER_CLUSTER_NAME, serviceListener);
     }
 
     //更新实例 线程安全
@@ -158,12 +166,12 @@ public class ServerCenter {
         HashSet<Instance> set = new HashSet<>(channelMap.keySet());
         set.forEach(ServerCenter::stopChannel);
         instances = list;
-        //todo test
         for (Instance instance : list) {
            if(countMap.get(instance.getInstanceId()) == null){
                countMap.put(instance.getInstanceId(), new AtomicInteger());
            }
         }
+        log.debug("更新instances");
         rwl.writeLock().unlock();
     }
 
@@ -171,11 +179,7 @@ public class ServerCenter {
     private static Instance getAvailableServer(){
         rwl.readLock().lock();
         try {
-            //todo 测试
-            Instance instance = LOAD_BALANCE.loadBalancingAndGet(instances);
-            AtomicInteger atomic = countMap.get(instance.getInstanceId());
-            atomic.addAndGet(1);
-            return instance;
+            return LOAD_BALANCE.loadBalancingAndGet(instances);
         } finally {
             rwl.readLock().unlock();
         }
@@ -184,12 +188,18 @@ public class ServerCenter {
 
     //进行远程调用
     public static Object remoteInvoke(Request request) throws Throwable {
-
+        return remoteInvoke(request, null);
+    }
+    //进行远程调用
+    public static Object remoteInvoke(Request request, Instance instance) throws Throwable {
         if(namingService == null){
             findServer();
         }
-        //todo 待获取结果
-        Channel channel = getChannel(getAvailableServer());
+
+        if(instance == null){
+            instance = getAvailableServer();
+        }
+        Channel channel = getChannel(instance);
 
         DefaultPromise<Object> promise = new DefaultPromise<>(channel.eventLoop());
 
@@ -200,12 +210,16 @@ public class ServerCenter {
         promise.await();
 
         if(promise.isSuccess()){
-            all.addAndGet(1);
+            log.debug("MsgId{}:成功获取结果!!", request.getMsgId());
             return promise.get();
-        } else{
+        } else if(request.getIsFaultTolerant() == 0){
+            log.debug("MsgId{}:进行容错处理!!", request.getMsgId());
+            request.setIsFaultTolerant(1);
+            return FAULT_TOLERANT.faultHandler(instance, promise.cause(), request);
+        }else {
+            log.debug("MsgId{}:容错后抛出错误", request.getMsgId());
             throw promise.cause();
         }
-
     }
     //channel复用
     private static Channel getChannel(Instance instance) throws InterruptedException {
@@ -216,6 +230,7 @@ public class ServerCenter {
 
         synchronized (instance){
             if (channelMap.containsKey(instance)){
+                log.debug("进行channel复用");
                 return channelMap.get(instance);
             }
             NioEventLoopGroup work = new NioEventLoopGroup(1);
@@ -245,6 +260,7 @@ public class ServerCenter {
                 channelMap.remove(instance);
                 future.channel().eventLoop().shutdownGracefully();
             });
+            log.debug("连接到新channel");
             return channel;
         }
 
@@ -257,6 +273,21 @@ public class ServerCenter {
             return;
         }
         channel.close();
+    }
+
+    //获取与参数不同的实例
+    public static Instance getOtherInstance(Instance instance){
+        rwl.readLock().lock();
+        try {
+            for (Instance in : instances) {
+                if(!in.equals(instance)){
+                    return in;
+                }
+            }
+            return null;
+        } finally {
+            rwl.readLock().unlock();
+        }
     }
 
 

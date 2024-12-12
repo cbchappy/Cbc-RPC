@@ -27,7 +27,7 @@ public class Registry {
 
    //注册服务到nacos
     public static void registryServer() throws NacosException {
-        log.debug("注册服务到nacos");
+
 
         Properties properties = new Properties();
         properties.setProperty(PropertyKeyConst.SERVER_ADDR, RegistryConfig.SERVER_ADDR);
@@ -36,19 +36,17 @@ public class Registry {
 
         namingService = NamingFactory.createNamingService(properties);
 
-        //todo 6test
+
         namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME , REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
-        namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, "0");
-        namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, "1");
-        namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, "2");
-        namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, "3");
-        namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, "4");
+        log.debug("注册服务到nacos, serverName:{}, groupName:{}, ip:{}, port:{}, cluster:{}",
+                REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
 
     }
 
     //从nacos移除服务
     public static void removeRegistry() throws NacosException {
-        log.debug("从nacos移除服务");
+        log.debug("从nacos移除服务, serverName:{}, groupName:{}, ip:{}, port:{}, cluster:{}",
+                REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
         namingService.deregisterInstance(REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
     }
 

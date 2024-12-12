@@ -1,16 +1,19 @@
 package com.example.rpcserver.handler;
 
+import com.alibaba.fastjson.JSON;
 import com.example.rpccommon.constants.ResponseStatus;
 import com.example.rpccommon.message.Request;
 import com.example.rpccommon.message.Response;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
+import com.example.rpcserver.spring.runner.StartRpcServerRunner;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-
+import java.util.List;
 import java.util.ServiceLoader;
 
 /**
@@ -19,10 +22,16 @@ import java.util.ServiceLoader;
  * @Description 请求处理器
  */
 @Slf4j
+@Component()
 public class RequestHandler extends SimpleChannelInboundHandler<Request> {
+
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Request msg){
-        log.debug("进入request处理器");
+        log.debug("msgId:{}的请求进入request处理器", msg.getMsgId());
+        log.debug("请求接口:{}, 请求方法名:{}, 请求参数类型:{}", msg.getInterfaceName(), msg.getMethodName(),
+                StringUtils.collectionToCommaDelimitedString(List.of(msg.getArgsClassNames())));
+
         Class<?> intefaceClass = null;
         Response response = Response.builder()
                 .msgId(msg.getMsgId())
@@ -37,10 +46,24 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
             return;
         }
 
-        ServiceLoader<?> load = ServiceLoader.load(intefaceClass);
-        Object next = load.iterator().next();
+        //先尝试获取bean
+        Object next = null;
+        next = StartRpcServerRunner.getBean(intefaceClass);
 
 
+        //获取不到再spi加载
+       if(next == null){
+           log.debug("spring中没有获取到bean,进行spi加载");
+           ServiceLoader<?> load = ServiceLoader.load(intefaceClass);
+           next = load.iterator().next();
+       }
+
+       if(next == null){
+           log.error("两种方式都没有获取到接口实现类");
+           response.setStatus(ResponseStatus.SERVER_IMPL_NOT_FOUND.code);
+           ctx.channel().writeAndFlush(response);
+           return;
+       }
 
         Class<?> aClass = next.getClass();
         String[] argsClassNames = msg.getArgsClassNames();
@@ -77,6 +100,7 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
             response.setRes(res);
             response.setResClassName(res.getClass().getName());
             ctx.channel().writeAndFlush(response);
+            log.debug("成功返回结果");
         } catch (IllegalAccessException | InvocationTargetException e) {
             log.debug(ResponseStatus.SERVER_EXCEPTION.msg);
             response.setStatus(ResponseStatus.SERVER_EXCEPTION.code);

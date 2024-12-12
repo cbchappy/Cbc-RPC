@@ -1,12 +1,10 @@
 package com.example.rpcserver;
 
-import ch.qos.logback.core.joran.action.IADataForComplexProperty;
+
 import com.example.rpccommon.protocol.ProtocolFrameDecoder;
 import com.example.rpcserver.handler.ReadIdleStateEventHandler;
 import com.example.rpcserver.handler.RequestHandler;
 import com.example.rpcserver.protocol.RpcServerMsgCodec;
-import com.example.rpcserver.server.RpcServer;
-import com.example.rpcserver.server.STImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -26,7 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ServerTest {
 
     public static void main(String[] args) throws Exception {
-        RpcServer.openServiceImpl(STImpl.class);
 
     }
 

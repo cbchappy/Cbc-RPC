@@ -3,7 +3,7 @@ package com.example.rpcclient.constants;
 /**
  * @Author Cbc
  * @DateTime 2024/12/9 18:59
- * @Description
+ * @Description 负载均衡码
  */
 public class LoadBalanceTypeCode {
 
