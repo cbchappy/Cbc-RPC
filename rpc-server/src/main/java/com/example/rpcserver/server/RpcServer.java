@@ -8,7 +8,6 @@ import com.example.rpcserver.handler.RequestHandler;
 import com.example.rpcserver.protocol.RpcServerMsgCodec;
 import com.example.rpcserver.registry.Registry;
 
-import com.fasterxml.jackson.databind.deser.ValueInstantiator;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -21,15 +20,13 @@ import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 
-import static com.example.rpcserver.config.RegistryConfig.*;
+import static com.example.rpcserver.config.ServerConfig.*;
 
 /**
  * @Author Cbc

@@ -7,10 +7,10 @@ package com.example.rpcclient.constants;
  */
 public class LoadBalanceTypeCode {
 
-    public static final Integer RANDOM_LOAD_BALANCE = 0;
+    public static final Integer RANDOM_LOAD_BALANCE = 0;//随机
 
-    public static final Integer ROUND_ROBIN_LOAD_BALANCE = 1;
+    public static final Integer ROUND_ROBIN_LOAD_BALANCE = 1;//轮询
 
-    public static final Integer WEIGHT_LOAD_BALANCE = 2;
+    public static final Integer WEIGHT_LOAD_BALANCE = 2;//权重
 
 }

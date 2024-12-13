@@ -1,18 +1,15 @@
 package com.example.rpcserver.registry;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
-import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.example.rpcserver.config.RegistryConfig;
+import com.example.rpcserver.config.ServerConfig;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Properties;
 
-import static com.example.rpcserver.config.RegistryConfig.*;
+import static com.example.rpcserver.config.ServerConfig.*;
 
 /**
  * @Author Cbc
@@ -30,9 +27,9 @@ public class Registry {
 
 
         Properties properties = new Properties();
-        properties.setProperty(PropertyKeyConst.SERVER_ADDR, RegistryConfig.SERVER_ADDR);
-        properties.setProperty(PropertyKeyConst.PASSWORD, RegistryConfig.PASSWORD);
-        properties.setProperty(PropertyKeyConst.USERNAME, RegistryConfig.USERNAME);
+        properties.setProperty(PropertyKeyConst.SERVER_ADDR, ServerConfig.SERVER_ADDR);
+        properties.setProperty(PropertyKeyConst.PASSWORD, ServerConfig.PASSWORD);
+        properties.setProperty(PropertyKeyConst.USERNAME, ServerConfig.USERNAME);
 
         namingService = NamingFactory.createNamingService(properties);
 

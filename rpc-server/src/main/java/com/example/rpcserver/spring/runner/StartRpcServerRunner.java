@@ -1,8 +1,7 @@
 package com.example.rpcserver.spring.runner;
 
-import com.example.rpcserver.config.RegistryConfig;
+import com.example.rpcserver.config.ServerConfig;
 import com.example.rpcserver.server.RpcServer;
-import com.example.rpcserver.spring.annotation.OpenRpcService;
 import com.example.rpcserver.spring.scan.RpcServerScan;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,7 +9,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
-import org.springframework.stereotype.Component;
+
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,18 +28,12 @@ public class StartRpcServerRunner implements ApplicationRunner {
     @Autowired
     ApplicationContext applicationContext;
 
-    @Autowired
-    RegistryConfig registryConfig;
 
-    @Autowired
-    Environment environment;
+
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
 
-        String property = environment.getProperty("cbc.rpc.test");
-        log.debug("cbc.rpc.test:{}", property);
-        log.debug("re是空?{}", registryConfig == null ? "是" : "否");
         List<Class<?>> list = RpcServerScan.getList();
         for (Class<?> aClass : list) {
             Object bean = applicationContext.getBean(aClass);

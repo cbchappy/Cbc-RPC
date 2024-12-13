@@ -1,5 +1,8 @@
 package com.example.rpcserver.spring.annotation;
 
+import com.example.rpcserver.spring.properties.ServerProperties;
+import org.springframework.context.annotation.Import;
+
 import java.lang.annotation.*;
 
 /**
@@ -9,6 +12,7 @@ import java.lang.annotation.*;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Target(ElementType.TYPE)//从spring获取bean
+@Target(ElementType.TYPE)
+@Import(ServerProperties.class)
 public @interface OpenRpcService {
 }

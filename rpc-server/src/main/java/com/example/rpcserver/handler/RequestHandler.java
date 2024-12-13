@@ -29,8 +29,8 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Request msg){
         log.debug("msgId:{}的请求进入request处理器", msg.getMsgId());
-        log.debug("请求接口:{}, 请求方法名:{}, 请求参数类型:{}", msg.getInterfaceName(), msg.getMethodName(),
-                StringUtils.collectionToCommaDelimitedString(List.of(msg.getArgsClassNames())));
+        log.debug("请求接口:{}, 请求方法名:{}, 请求参数类型:{}",
+                msg.getInterfaceName(), msg.getMethodName(), msg.getArgsClassNames() == null ? "" : msg.getArgsClassNames());
 
         Class<?> intefaceClass = null;
         Response response = Response.builder()

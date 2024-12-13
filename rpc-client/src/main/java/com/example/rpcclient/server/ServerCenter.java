@@ -15,13 +15,12 @@ import com.example.rpcclient.blance.RoundRobinLoadBalance;
 import com.example.rpcclient.blance.WeightLoadBalance;
 import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.constants.FaultTolerantCode;
-import com.example.rpcclient.handler.IdleStateEventHandler;
+import com.example.rpcclient.handler.ReadIdleStateEventHandler;
 import com.example.rpcclient.handler.ResponseHandler;
+import com.example.rpcclient.handler.WriteIdleEventHandler;
 import com.example.rpcclient.protocol.RpcClientMsgCodec;
-import com.example.rpcclient.tolerant.DoNothingFaultTolerant;
 import com.example.rpcclient.tolerant.FaultTolerant;
 import com.example.rpcclient.tolerant.RetryFaultTolerant;
-import com.example.rpcclient.tolerant.TestOtherFaultTolerant;
 import com.example.rpccommon.constants.RpcExceptionMsg;
 import com.example.rpccommon.exception.RpcException;
 import com.example.rpccommon.message.Request;
@@ -52,7 +51,7 @@ import static com.example.rpcclient.constants.LoadBalanceTypeCode.*;
 @Slf4j
 public class ServerCenter {
     //todo 容错处理
-    //todo 更新instance也要更新channelMap 处理掉一些连接问题
+    //todo 更新instance也要更新channelMap 处理掉弃用的连接
     private static final Map<Instance, Channel> channelMap = new ConcurrentHashMap<>();//根据实例存储channel 进行channel复用
 
     private static volatile NamingService namingService;//nacos总服务端
@@ -62,7 +61,7 @@ public class ServerCenter {
     //todo delete
     public final static AtomicInteger all = new AtomicInteger(0);//计数
 
-    //todo countMap
+    //todo delete
     public final static Map<String, AtomicInteger> countMap = new ConcurrentHashMap<>(7);//计数
 
     private final static ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();//instances的读写锁
@@ -89,14 +88,10 @@ public class ServerCenter {
     }//初始化负载均衡类
 
     static {
-        if(FAULT_TOLERANT_CODE == FaultTolerantCode.DO_NOTHING){
-            FAULT_TOLERANT = new DoNothingFaultTolerant();
-        } else if (FAULT_TOLERANT_CODE == FaultTolerantCode.RETRY) {
+       if (FAULT_TOLERANT_CODE == FaultTolerantCode.RETRY) {
             FAULT_TOLERANT = new RetryFaultTolerant();
-        } else if (FAULT_TOLERANT_CODE == FaultTolerantCode.TEST_OTHER) {
-            FAULT_TOLERANT = new TestOtherFaultTolerant();
         }else {
-            FAULT_TOLERANT = new TestOtherFaultTolerant();
+            FAULT_TOLERANT = new RetryFaultTolerant();
             throw new RpcException(RpcExceptionMsg.FAULT_TOLERANT_NOT_FOUND);
         }
     }//初始化容错处理类
@@ -117,6 +112,8 @@ public class ServerCenter {
                 properties.setProperty(PropertyKeyConst.USERNAME, ClientConfig.USERNAME);
 
                 namingService = NamingFactory.createNamingService(properties);
+
+                log.debug("ClientConfig.SERVER_ADDR:{}", ClientConfig.SERVER_ADDR);
 
                 instances = namingService.selectInstances(SERVER_NAME, SERVER_GROUP_NAME, SERVER_CLUSTER_NAME,true);
                 log.debug("服务发现个数:{}", instances.size());
@@ -141,8 +138,7 @@ public class ServerCenter {
         EventListener serviceListener = new AbstractEventListener() {
             @Override
             public void onEvent(Event event) {
-                if (event instanceof NamingEvent ) {
-                    NamingEvent namingEvent = (NamingEvent) event;
+                if (event instanceof NamingEvent namingEvent) {
                     List<Instance> list = namingEvent.getInstances();
                     List<Instance> collect = list.stream().filter(Instance::isHealthy).toList();
                     if(collect.size() == 0){
@@ -212,13 +208,9 @@ public class ServerCenter {
         if(promise.isSuccess()){
             log.debug("MsgId{}:成功获取结果!!", request.getMsgId());
             return promise.get();
-        } else if(request.getIsFaultTolerant() == 0){
-            log.debug("MsgId{}:进行容错处理!!", request.getMsgId());
-            request.setIsFaultTolerant(1);
+        } else {
+            log.debug("MsgId{}:进行容错处理", request.getMsgId());
             return FAULT_TOLERANT.faultHandler(instance, promise.cause(), request);
-        }else {
-            log.debug("MsgId{}:容错后抛出错误", request.getMsgId());
-            throw promise.cause();
         }
     }
     //channel复用
@@ -244,11 +236,16 @@ public class ServerCenter {
                             ch.pipeline().addLast(new RpcClientMsgCodec());//codec
                             ch.pipeline().addLast(new ResponseHandler());//响应处理器
                             //到达指定空闲时间触发事件
-                            ch.pipeline().addLast(new IdleStateHandler(0, 5, 0, TimeUnit.SECONDS));
-                            ch.pipeline().addLast(new IdleStateEventHandler(instance));//处理空闲事件
+                            if(LONG_CONNECTION){
+                                ch.pipeline().addLast(new IdleStateHandler( CONNECT_IDLE_TIME, 0, 0, TimeUnit.SECONDS));
+                                ch.pipeline().addLast(new IdleStateHandler(0, PING_INTERVAL,0, TimeUnit.SECONDS));
+                                ch.pipeline().addLast(new ReadIdleStateEventHandler(instance));//处理写空闲
+                                ch.pipeline().addLast(new WriteIdleEventHandler());//处理读空闲
+                            }
 
                         }
                     })
+                    .option(ChannelOption.SO_KEEPALIVE, LONG_CONNECTION)
                     .connect(instance.getIp(), instance.getPort())
                     .sync()
                     .channel();
@@ -273,21 +270,6 @@ public class ServerCenter {
             return;
         }
         channel.close();
-    }
-
-    //获取与参数不同的实例
-    public static Instance getOtherInstance(Instance instance){
-        rwl.readLock().lock();
-        try {
-            for (Instance in : instances) {
-                if(!in.equals(instance)){
-                    return in;
-                }
-            }
-            return null;
-        } finally {
-            rwl.readLock().unlock();
-        }
     }
 
 

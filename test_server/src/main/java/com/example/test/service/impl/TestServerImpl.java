@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
  * @DateTime 2024/12/10 17:53
  * @Description
  */
-@Service
+//@Service
 @Slf4j
 @OpenRpcService
 public class TestServerImpl implements TestServer {

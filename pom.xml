@@ -19,10 +19,11 @@
     <description>Cbc-RPC</description>
 
     <modules>
-        <module>rpc-common</module>
         <module>rpc-client</module>
+        <module>rpc-common</module>
         <module>rpc-server</module>
         <module>test_server</module>
+        <module>test_client</module>
     </modules>
 
     <properties>
@@ -38,7 +39,6 @@
         </dependency>
 
 
-
         <!--netty-->
         <dependency>
             <groupId>io.netty</groupId>
@@ -50,15 +50,15 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-<!--            <version>1.18.34</version>-->
+            <version>1.18.34</version>
         </dependency>
 
-<!--        &lt;!&ndash;logback&ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>ch.qos.logback</groupId>-->
-<!--            <artifactId>logback-classic</artifactId>-->
-<!--            <version>1.2.3</version>-->
-<!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>ch.qos.logback</groupId>-->
+        <!--            <artifactId>logback-classic</artifactId>-->
+        <!--            <version>1.2.3</version>-->
+        <!--        </dependency>-->
 
         <!--fastjson-->
         <dependency>
@@ -74,12 +74,32 @@
             <version>4.0.63</version>
         </dependency>
 
-
-
-
-
+        <!--configuration-processor-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
 
 
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>17</source>
+                    <target>17</target>
+                    <encoding>UTF-8</encoding>
+                    <!-- 启用 -parameters 编译器标志 保留方法参数-->
+                    <compilerArgument>-parameters</compilerArgument>
+                </configuration>
+            </plugin>
+
+        </plugins>
+
+    </build>
 
 </project>

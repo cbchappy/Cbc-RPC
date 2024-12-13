@@ -1,7 +1,8 @@
-package com.example.rpcserver.handler;
+package com.example.rpcclient.handler;
 
+import com.example.rpcclient.config.ClientConfig;
+import com.example.rpcclient.server.ServerCenter;
 import com.example.rpccommon.message.PingMsg;
-import com.example.rpcserver.config.ServerConfig;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
@@ -10,18 +11,19 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * @Author Cbc
- * @DateTime 2024/12/10 13:09
+ * @DateTime 2024/12/13 16:01
  * @Description
  */
 @Slf4j
-public class ReadIdleStateEventHandler extends ChannelDuplexHandler {
+public class WriteIdleEventHandler extends ChannelDuplexHandler {
+
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+
         IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
-        if(idleStateEvent.state() == IdleState.READER_IDLE){
-            log.debug("未接收到客户端消息达到{}秒, 开始断开客户端连接", ServerConfig.READ_IDLE_TIME);
-            ctx.channel().close();
-            return;
+        if(idleStateEvent.state() == IdleState.WRITER_IDLE){
+            log.debug("发送心跳包, 间隔时间为{}秒", ClientConfig.PING_INTERVAL);
+            ctx.channel().writeAndFlush(new PingMsg());
         }
         super.userEventTriggered(ctx, evt);
     }

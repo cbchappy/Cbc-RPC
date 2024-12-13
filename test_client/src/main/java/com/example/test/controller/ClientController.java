@@ -24,4 +24,10 @@ public class ClientController {
         return testServer.get();
     }
 
+    @RequestMapping("/testError")
+    public String testError(){
+        log.debug("进行错误测试");
+        return testServer.error("kkk");
+    }
+
 }

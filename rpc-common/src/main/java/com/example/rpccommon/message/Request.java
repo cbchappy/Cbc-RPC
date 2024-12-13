@@ -31,6 +31,8 @@ public class Request extends RpcMsg{
 
     private Integer msgId;
 
+    private transient Integer retryNum;//重试次数
+
     private String interfaceName;
 
     private String methodName;
@@ -39,14 +41,13 @@ public class Request extends RpcMsg{
 
    private String[] argsClassNames;//json序列化必需
 
-    private Integer isFaultTolerant;//0表示是新的request 其他值表示是出现错误的request 需要进行容错处理
 
 
 
     //完善Request的参数
     private static void perfectRequest(Request request){
         request.msgId = generateId();
-        request.isFaultTolerant = 0;
+        request.retryNum = 0;
         Object[] a = request.args;
         if(a != null){
             request.argsClassNames = new String[a.length];

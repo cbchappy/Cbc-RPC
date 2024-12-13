@@ -11,4 +11,6 @@ import com.example.rpcclient.spring.annotation.RpcInvoke;
 public interface TestServer {
 
     String get();
+
+    String error(String v);
 }
