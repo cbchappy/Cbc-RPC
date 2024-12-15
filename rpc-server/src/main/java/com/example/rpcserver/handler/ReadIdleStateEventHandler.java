@@ -4,9 +4,12 @@ import com.example.rpccommon.message.PingMsg;
 import com.example.rpcserver.config.ServerConfig;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelPromise;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
+
+import java.net.SocketAddress;
 
 /**
  * @Author Cbc
@@ -15,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class ReadIdleStateEventHandler extends ChannelDuplexHandler {
+
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         IdleStateEvent idleStateEvent = (IdleStateEvent) evt;

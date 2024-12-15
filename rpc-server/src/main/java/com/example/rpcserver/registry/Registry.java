@@ -38,7 +38,10 @@ public class Registry {
         log.debug("注册服务到nacos, serverName:{}, groupName:{}, ip:{}, port:{}, cluster:{}",
                 REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
 
+
     }
+
+
 
     //从nacos移除服务
     public static void removeRegistry() throws NacosException {

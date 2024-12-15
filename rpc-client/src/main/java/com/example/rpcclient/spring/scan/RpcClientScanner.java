@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * @Author Cbc
  * @DateTime 2024/12/12 14:23
- * @Description
+ * @Description 自定义扫描类 扫描添加了@RpcInvoke注解的接口, 并为其注入代理工厂
  */
 @Slf4j
 public class RpcClientScanner extends ClassPathBeanDefinitionScanner {
@@ -26,11 +26,15 @@ public class RpcClientScanner extends ClassPathBeanDefinitionScanner {
         super(registry);
     }
 
-    @Override
-    public void addIncludeFilter(TypeFilter includeFilter) {
-        log.debug("addIncludeFilter");
-        super.addIncludeFilter((metadataReader, metadataReaderFactory) -> true);
-    }
+//    @Override
+//    public void addIncludeFilter(TypeFilter includeFilter) {
+//        log.debug("addIncludeFilter");
+//        super.addIncludeFilter((metadataReader, metadataReaderFactory) -> {
+//
+//            log.debug("------start filter:------");
+//            return true;
+//        });//父类默认不扫描接口???
+//    }
 
     @Override
     public Set<BeanDefinitionHolder> doScan(String... basePackages) {
@@ -42,9 +46,9 @@ public class RpcClientScanner extends ClassPathBeanDefinitionScanner {
                 log.debug("process holder");
                 GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
                 String beanClassName = definition.getBeanClassName();
-                definition.setBeanClass(RpcClientFactoryBean.class);
-                definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
-                definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
+                definition.setBeanClass(RpcClientFactoryBean.class);//FactoryBean的实现类 会从其获取bean
+                definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);//依赖的注入方式
+                definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);//注入FactoryBean时自动转换
             }
         }
 
@@ -54,6 +58,7 @@ public class RpcClientScanner extends ClassPathBeanDefinitionScanner {
 
     @Override
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
+        //AnnotatedBeanDefinition 存储bean的注释信息 可以用来筛选合适的目标
         log.debug("isCandidateComponent");
         AnnotationMetadata metadata = beanDefinition.getMetadata();
         return metadata.isInterface() && metadata.isIndependent() && metadata.hasAnnotation(RpcInvoke.class.getName());

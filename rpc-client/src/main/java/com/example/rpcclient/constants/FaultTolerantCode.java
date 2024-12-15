@@ -7,5 +7,5 @@ package com.example.rpcclient.constants;
  * @Description 容错处理码
  */
 public class FaultTolerantCode {
-    public static int RETRY = 0;
+    public static int RETRY = 0;//重试策略
 }

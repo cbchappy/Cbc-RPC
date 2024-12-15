@@ -24,7 +24,7 @@ public class ClientConfig {
 
     public static Integer LOAD_BALANCE_CODE = 2; //负载均衡策略码 0 随机 1 轮询 2 权重
 
-    public static Integer SERIALIZER_TYPE_CODE = 0;//序列化策略码 0 java原始流 1 json 2 hessian
+    public static Integer SERIALIZER_TYPE_CODE = 1;//序列化策略码 0 java原始流 1 json 2 hessian
 
     //todo 待重做
     public static Integer FAULT_TOLERANT_CODE = 0;//容错处理 0 进行重试
@@ -35,7 +35,9 @@ public class ClientConfig {
 
     public static Boolean LONG_CONNECTION = true;//是否开启长连接
 
-    public static Integer RETRY_NUM = 5;
+    public static Integer RETRY_NUM = 5;//开启重试策略后的最大重试次数
+
+    public static Integer OVERTIME = 1000;//单个请求超时时间 单位为秒
 
 
 

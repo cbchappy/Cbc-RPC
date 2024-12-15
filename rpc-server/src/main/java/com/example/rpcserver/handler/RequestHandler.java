@@ -2,8 +2,10 @@ package com.example.rpcserver.handler;
 
 import com.alibaba.fastjson.JSON;
 import com.example.rpccommon.constants.ResponseStatus;
+import com.example.rpccommon.exception.RpcException;
 import com.example.rpccommon.message.Request;
 import com.example.rpccommon.message.Response;
+import com.example.rpcserver.server.RpcServer;
 import com.example.rpcserver.spring.runner.StartRpcServerRunner;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -43,7 +45,7 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
             log.debug(ResponseStatus.INTERFACE_NOT_FOUND.msg);
             response.setStatus(ResponseStatus.INTERFACE_NOT_FOUND.code);
             ctx.channel().writeAndFlush(response);
-            return;
+            throw new RpcException(e);
         }
 
         //先尝试获取bean
@@ -62,7 +64,7 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
            log.error("两种方式都没有获取到接口实现类");
            response.setStatus(ResponseStatus.SERVER_IMPL_NOT_FOUND.code);
            ctx.channel().writeAndFlush(response);
-           return;
+           throw new RpcException(ResponseStatus.SERVER_IMPL_NOT_FOUND.msg);
        }
 
         Class<?> aClass = next.getClass();
@@ -79,7 +81,7 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
                    log.debug(ResponseStatus.ARGS_METHOD.msg);
                    response.setStatus(ResponseStatus.ARGS_METHOD.code);
                    ctx.channel().writeAndFlush(response);
-                   return;
+                   throw new RpcException(e);
                }
            }
        }
@@ -91,7 +93,7 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
             log.debug(ResponseStatus.METHOD_NOT_FOUND.msg);
             response.setStatus(ResponseStatus.METHOD_NOT_FOUND.code);
             ctx.channel().writeAndFlush(response);
-            return;
+            throw new RpcException(e);
         }
 
         try {
@@ -105,8 +107,18 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
             log.debug(ResponseStatus.SERVER_EXCEPTION.msg);
             response.setStatus(ResponseStatus.SERVER_EXCEPTION.code);
             ctx.channel().writeAndFlush(response);
+            throw new RpcException(e);
         }
 
+    }
+
+
+    @Override//捕获错误 记录错误次数 判断是否要更新容错状态
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        log.debug("捕获到错误!!:{}", cause.getClass().getName());
+        RpcServer.exceptionCountAdd();
+        RpcServer.updateFusing();
+        super.exceptionCaught(ctx, cause);
     }
 
 }

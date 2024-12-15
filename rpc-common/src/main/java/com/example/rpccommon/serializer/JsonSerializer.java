@@ -2,9 +2,7 @@ package com.example.rpccommon.serializer;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.example.rpccommon.message.PingMsg;
-import com.example.rpccommon.message.Request;
-import com.example.rpccommon.message.Response;
+import com.example.rpccommon.message.*;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,7 +14,7 @@ import java.nio.charset.StandardCharsets;
  * @DateTime 2024/12/7 19:17
  * @Description json序列化 类似数组参数仍然会有风险！！！
  */
-//todo 完善json
+//todo json序列化容易出bug
 @Slf4j
 public class JsonSerializer extends RpcSerializer {
 
@@ -37,13 +35,15 @@ public class JsonSerializer extends RpcSerializer {
 
         JSONObject jo = JSON.parseObject(json);
 
-        if (jo.getInnerMap().containsKey("status")) {
+        if (jo.getInnerMap().containsKey("status") && jo.getInnerMap().containsKey("msgId")) {
             return deSerializedResponse(jo);
         } else if (jo.getInnerMap().containsKey("msgId")) {
             return deSerializedRequest(jo);
+        } else if (jo.getInnerMap().containsKey("status")) {
+            return jo.toJavaObject(CloseMsg.class);
         }
 
-       return jo.toJavaObject(PingMsg.class);
+        return jo.toJavaObject(PingMsg.class);
     }
 
     private static Response deSerializedResponse(JSONObject jo) {
@@ -75,6 +75,7 @@ public class JsonSerializer extends RpcSerializer {
                 }
             }
         } catch (ClassNotFoundException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
 

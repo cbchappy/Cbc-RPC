@@ -26,6 +26,9 @@ public class ServerProperties implements InitializingBean {
         private Integer readIdleTime;
         private Integer bossThreadNum;
         private Integer workerThreadNum;
+        private Integer StartFusingNum;
+        private Double FusingDivisor;
+        private Integer fusingRestartTime;
     }
 
 
@@ -75,6 +78,9 @@ public class ServerProperties implements InitializingBean {
            READ_IDLE_TIME = connect.readIdleTime == null ? READ_IDLE_TIME : connect.readIdleTime;
            BOSS_THREAD_NUM = connect.getBossThreadNum() == null ? BOSS_THREAD_NUM : connect.getBossThreadNum();
            WORK_THREAD_NUM = connect.workerThreadNum == null ? WORK_THREAD_NUM : connect.workerThreadNum;
+           FUSING_START_NUM = connect.StartFusingNum == null ? FUSING_START_NUM : connect.StartFusingNum;
+           FUSING_DIVISOR = connect.FusingDivisor == null ? FUSING_DIVISOR : connect.FusingDivisor;
+           FUSING_RESTART_TIME = connect.fusingRestartTime == null ? FUSING_RESTART_TIME : connect.fusingRestartTime;
         }
     }
 }

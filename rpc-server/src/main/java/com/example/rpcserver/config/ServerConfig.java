@@ -30,5 +30,11 @@ public class ServerConfig {
 
     public static Integer WORK_THREAD_NUM = 3;//netty的workers线程数
 
+    public static Integer FUSING_START_NUM = 30;//熔断开始计算的最小连接数
+
+    public static Double FUSING_DIVISOR = 0.3;//熔断因子
+
+    public static Integer FUSING_RESTART_TIME = 60 * 60; //单位为秒
+
 
 }

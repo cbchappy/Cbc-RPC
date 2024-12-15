@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @Author Cbc
  * @DateTime 2024/12/13 16:01
- * @Description
+ * @Description 读空闲事件处理器 达到写空闲定时发送心跳包
  */
 @Slf4j
 public class WriteIdleEventHandler extends ChannelDuplexHandler {

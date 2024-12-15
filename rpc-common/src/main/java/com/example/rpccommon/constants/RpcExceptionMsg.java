@@ -14,4 +14,7 @@ public class RpcExceptionMsg {
     public static final String MESSAGE_CONVERSION_ERROR = "消息类型转换出错";
     public static final String FAULT_TOLERANT_NOT_FOUND = "无法找到指定的容错处理策略";
     public static final String NACOS_CONNECT_FAIL = "nacos连接失败, 请检查输入信息";
+    public static final String SERVER_REFUSE = "服务器拒绝连接";
+    public static final String REQUEST_OVERTIME = "请求超时";
+    public static final String IDLE_TIME_REFUSE = "通道因为到达服务器指定空闲时间而断开";
 }

@@ -27,7 +27,7 @@ public class ReadIdleStateEventHandler extends ChannelDuplexHandler {
 
         IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
         if(idleStateEvent.state() == IdleState.READER_IDLE){
-            log.debug("连接达到{}秒, 开始断开连接", ClientConfig.CONNECT_IDLE_TIME);
+            log.debug("连接空闲达到{}秒, 开始断开连接", ClientConfig.CONNECT_IDLE_TIME);
             ServerCenter.stopChannel(instance);
         }
         super.userEventTriggered(ctx, evt);

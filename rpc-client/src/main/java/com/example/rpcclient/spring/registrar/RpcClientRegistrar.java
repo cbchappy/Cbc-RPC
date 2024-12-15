@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * @Author Cbc
  * @DateTime 2024/12/12 14:21
- * @Description
+ * @Description 在bean未注册前启动自定义扫描类进行扫描和处理
  */
 @Slf4j
 public class RpcClientRegistrar implements ImportBeanDefinitionRegistrar {

@@ -17,12 +17,14 @@ import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.constants.FaultTolerantCode;
 import com.example.rpcclient.handler.ReadIdleStateEventHandler;
 import com.example.rpcclient.handler.ResponseHandler;
+import com.example.rpcclient.handler.ServerCloseHandler;
 import com.example.rpcclient.handler.WriteIdleEventHandler;
 import com.example.rpcclient.protocol.RpcClientMsgCodec;
 import com.example.rpcclient.tolerant.FaultTolerant;
 import com.example.rpcclient.tolerant.RetryFaultTolerant;
 import com.example.rpccommon.constants.RpcExceptionMsg;
 import com.example.rpccommon.exception.RpcException;
+import com.example.rpccommon.message.CloseMsg;
 import com.example.rpccommon.message.Request;
 import com.example.rpccommon.protocol.ProtocolFrameDecoder;
 import io.netty.bootstrap.Bootstrap;
@@ -30,6 +32,8 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.Attribute;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.DefaultPromise;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +50,7 @@ import static com.example.rpcclient.constants.LoadBalanceTypeCode.*;
 /**
  * @Author Cbc
  * @DateTime 2024/12/9 14:15
- * @Description 服务管理中心   管理所有网络连接 //todo 注意考虑线程安全问题  先进行服务注册
+ * @Description 服务管理中心   管理所有rpc网络连接 //todo 注意考虑线程安全问题  先进行服务注册
  */
 @Slf4j
 public class ServerCenter {
@@ -201,9 +205,25 @@ public class ServerCenter {
 
         ResponseHandler.getMap().put(request.getMsgId(), promise);
 
+        MyCloseFutureListener listener = new MyCloseFutureListener(promise);
+
+        channel.closeFuture().addListener(listener);
+
+        //服务器应该发送关闭信息
+        //拒绝策略 0.协议错误导致关闭  1.熔断状态导致关闭  2.到达指定空闲时间导致主动关闭
+        //进行容错处理 三种状态应该更换服务器进行重试
+        //CloseMsg: status对应关闭理由
+
         channel.writeAndFlush(request);
 
-        promise.await();
+        promise.await(OVERTIME, TimeUnit.SECONDS);
+
+        channel.closeFuture().removeListener(listener);
+
+        if(!promise.isDone()){
+            log.debug("请求连接超时, msgId:{}", request.getMsgId());
+            promise.setFailure(new RuntimeException(RpcExceptionMsg.REQUEST_OVERTIME));
+        }
 
         if(promise.isSuccess()){
             log.debug("MsgId{}:成功获取结果!!", request.getMsgId());
@@ -234,6 +254,7 @@ public class ServerCenter {
                         protected void initChannel(NioSocketChannel ch) throws Exception {
                             ch.pipeline().addLast(new ProtocolFrameDecoder());//解码
                             ch.pipeline().addLast(new RpcClientMsgCodec());//codec
+                            ch.pipeline().addLast(new ServerCloseHandler());//服务器主动关闭处理器
                             ch.pipeline().addLast(new ResponseHandler());//响应处理器
                             //到达指定空闲时间触发事件
                             if(LONG_CONNECTION){
@@ -270,6 +291,40 @@ public class ServerCenter {
             return;
         }
         channel.close();
+    }
+
+
+    public static class MyCloseFutureListener implements ChannelFutureListener{
+        private DefaultPromise<Object> promise;
+
+        private MyCloseFutureListener(DefaultPromise<Object> promise){
+            this.promise = promise;
+        }
+
+        @Override
+        public void operationComplete(ChannelFuture future) throws Exception {
+            log.debug("operationComplete");
+            Attribute<Object> attr = future.channel().attr(AttributeKey.valueOf("close"));
+            Object o = attr.get();
+            if(o == null || promise.isDone()){
+                log.debug("return");
+                return;
+            }
+            CloseMsg closeMsg = (CloseMsg) o;
+            Integer status = closeMsg.getStatus();
+            if(status.intValue() == CloseMsg.CloseStatus.normal.code){
+                promise.setFailure(new RuntimeException(RpcExceptionMsg.IDLE_TIME_REFUSE));
+                return;
+            }
+            if(status.intValue() == CloseMsg.CloseStatus.protocolError.code){
+                promise.setFailure(new RuntimeException(RpcExceptionMsg.VERIFY_ERROR));
+                return;
+            }
+            if(status.intValue() == CloseMsg.CloseStatus.refuse.code){
+                promise.setFailure(new RuntimeException(RpcExceptionMsg.SERVER_REFUSE));
+            }
+
+        }
     }
 
 

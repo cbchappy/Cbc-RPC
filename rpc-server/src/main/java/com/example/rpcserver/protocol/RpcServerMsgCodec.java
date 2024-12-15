@@ -4,12 +4,14 @@ import com.example.rpccommon.config.ProtocolConfig;
 import com.example.rpccommon.constants.ResponseStatus;
 import com.example.rpccommon.constants.RpcMsgTypeCode;
 import com.example.rpccommon.constants.SerializerCode;
+import com.example.rpccommon.message.CloseMsg;
 import com.example.rpccommon.message.Request;
 import com.example.rpccommon.message.Response;
 import com.example.rpccommon.message.RpcMsg;
 import com.example.rpccommon.serializer.RpcSerializer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.DefaultChannelPromise;
 import io.netty.handler.codec.ByteToMessageCodec;
 import io.netty.util.AttributeKey;
 import io.netty.util.AttributeMap;
@@ -29,7 +31,7 @@ public class RpcServerMsgCodec extends ByteToMessageCodec<RpcMsg> {
         //从上下文获取 序列化方式 1
         Object o = ctx.attr(AttributeKey.valueOf("serializerTypeCode")).get();
         //获取序列化方式
-        byte serializerTypeCode = o == null ? SerializerCode.JSON.byteValue() : (byte) o;
+        byte serializerTypeCode = o == null ? SerializerCode.JDK.byteValue() : (byte) o;
 
         //魔数 4
         out.writeInt(ProtocolConfig.getMagic());
@@ -65,8 +67,10 @@ public class RpcServerMsgCodec extends ByteToMessageCodec<RpcMsg> {
 
         //校验失败
         if(magic != ProtocolConfig.getMagic() || version != ProtocolConfig.getVersion()){
-            log.error("校验失败, 关闭channel");
+            log.error("协议校验失败, 关闭channel");
+            ctx.channel().writeAndFlush(new CloseMsg(CloseMsg.CloseStatus.protocolError));
             ctx.channel().close();
+            return;
         }
 
         byte msgTypeCode = in.readByte();//消息类型
@@ -88,6 +92,10 @@ public class RpcServerMsgCodec extends ByteToMessageCodec<RpcMsg> {
 
         RpcSerializer serializer = RpcSerializer.getSerializerByCode(serializerTypeCode);
         Object o = serializer.deSerialize(bytes);
+
+        //todo delete
+        //in.release(); 释放ByteBuf导致对象无法发送到后面的处理器 估计是netty自己会释放ByteBuf
+
         out.add(RpcMsg.typeConversion(o, msgTypeCode));
 
     }

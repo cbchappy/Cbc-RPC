@@ -7,7 +7,7 @@ import org.springframework.beans.factory.FactoryBean;
 /**
  * @Author Cbc
  * @DateTime 2024/12/12 14:18
- * @Description
+ * @Description 生成远程调用接口的代理bean
  */
 @Slf4j
 public class RpcClientFactoryBean implements FactoryBean {
@@ -16,9 +16,14 @@ public class RpcClientFactoryBean implements FactoryBean {
     public RpcClientFactoryBean() {
     }
 
-    public RpcClientFactoryBean(Class<?> interClass) {
-        log.debug("RpcClientFactoryBean代理接口名:{}", interClass);
-        this.interClass = interClass;
+//    public RpcClientFactoryBean(Class<?> interClass) {
+//        log.debug("RpcClientFactoryBean代理接口名:{}", interClass);
+//        this.interClass = interClass;
+//    }
+
+    public RpcClientFactoryBean(String s) throws ClassNotFoundException {
+        log.debug("----FactoryBean----:{}", s);
+        interClass = this.getClass().getClassLoader().loadClass(s);
     }
 
     @Override

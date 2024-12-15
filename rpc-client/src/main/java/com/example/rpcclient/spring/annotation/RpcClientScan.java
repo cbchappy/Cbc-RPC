@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 /**
  * @Author Cbc
  * @DateTime 2024/12/12 13:39
- * @Description 扫描指定包, 寻找添加了@RpcInvoke的接口, 并为其配置代理工厂
+ * @Description 扫描指定包, 导入properties, 寻找添加了@RpcInvoke的接口, 并为其配置代理工厂
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

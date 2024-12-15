@@ -13,7 +13,7 @@ import static com.example.rpcclient.config.ClientConfig.*;
 /**
  * @Author Cbc
  * @DateTime 2024/12/13 12:24
- * @Description
+ * @Description 读取application的所有相关属性
  */
 @ConfigurationProperties("cbc.rpc")
 @Data
@@ -33,6 +33,7 @@ public class ClientProperties implements InitializingBean {
         private Integer maxIdleTime;
         private Boolean longConnection;
         private Integer retryNum;
+        private Integer overTime;
     }
 
     @Data
@@ -81,6 +82,7 @@ public class ClientProperties implements InitializingBean {
             CONNECT_IDLE_TIME = connect.maxIdleTime == null ? CONNECT_IDLE_TIME : connect.getMaxIdleTime();
             LONG_CONNECTION = connect.longConnection == null ? LONG_CONNECTION : connect.getLongConnection();
             RETRY_NUM = connect.retryNum == null ? RETRY_NUM : connect.retryNum;
+            OVERTIME = connect.overTime == null ? OVERTIME : connect.overTime;
         }
     }
 }

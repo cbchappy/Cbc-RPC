@@ -25,6 +25,8 @@ public abstract class RpcMsg implements Serializable {
             return RpcMsgTypeCode.RESPONSE;
         } else if (obj instanceof PingMsg) {
             return RpcMsgTypeCode.PINGMSG;
+        }else if(obj instanceof CloseMsg){
+            return RpcMsgTypeCode.CLOSE;
         }
         throw new RpcCommonException("消息类型错误");
     }
@@ -41,9 +43,13 @@ public abstract class RpcMsg implements Serializable {
             return (Response) o;
         }else if(code == RpcMsgTypeCode.PINGMSG){
             return (PingMsg) o;
+        } else if (code == RpcMsgTypeCode.CLOSE) {
+            return (CloseMsg) o;
         }
         throw new RpcCommonException(RpcExceptionMsg.MESSAGE_CONVERSION_ERROR);
     }
+
+
 
 
 

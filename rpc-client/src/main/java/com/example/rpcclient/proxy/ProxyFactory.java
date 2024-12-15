@@ -11,7 +11,7 @@ import java.lang.reflect.Proxy;
 /**
  * @Author Cbc
  * @DateTime 2024/12/9 14:07
- * @Description 代理工厂 生成接口代理类以供进行消息调用
+ * @Description 代理工厂 生成指定接口的代理类以供进行远程调用
  */
 @Slf4j
 public class ProxyFactory{
@@ -20,7 +20,7 @@ public class ProxyFactory{
     //封装请求调用
     //注意唯一消息id
     public static Object createProxy(Class<?> interfaceClass){
-
+        log.debug("--createProxy--");
         return Proxy.newProxyInstance(ProxyFactory.class.getClassLoader(),
                 new Class[]{interfaceClass}, new ProxyInvocationHandler());
     }
