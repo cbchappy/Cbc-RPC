@@ -1,10 +1,8 @@
 package com.example.test.service.impl;
 
-import ch.qos.logback.classic.Logger;
 import com.example.rpcserver.spring.annotation.OpenRpcService;
-import com.example.test.service.TestServer;
+import com.example.test.service.TestRpc;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * @Author Cbc
@@ -12,14 +10,10 @@ import org.springframework.stereotype.Service;
  * @Description
  */
 //@Service
-@Slf4j
+
+
 @OpenRpcService
-public class TestServerImpl implements TestServer {
-
-    public TestServerImpl() {
-        log.debug("被构建了");
-    }
-
+public class TestRpcImpl implements TestRpc {
     @Override
     public String get() {
         return "test_res";

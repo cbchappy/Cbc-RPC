@@ -8,7 +8,7 @@ import com.example.rpcserver.spring.annotation.OpenRpcService;
  * @Description
  */
 @OpenRpcService
-public interface TestServer {
+public interface TestRpc {
 
     String get();
 }

@@ -23,6 +23,7 @@ public class WeightLoadBalance implements LoadBalance{
         ThreadLocalRandom current = ThreadLocalRandom.current();
         double random = current.nextDouble(arr[len - 1]);
 
+        //二分法提高效率
         int l = 0;
         int r = len - 1;
         while (l < r){

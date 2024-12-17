@@ -1,6 +1,6 @@
 package com.example.test.controller;
 
-import com.example.test.service.TestServer;
+import com.example.test.service.TestRpc;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class ClientController {
     @Autowired
-    private TestServer testServer;
+    private TestRpc testServer;
 
     @RequestMapping("")
     public String get(){

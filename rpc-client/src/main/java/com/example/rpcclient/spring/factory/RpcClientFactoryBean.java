@@ -10,30 +10,25 @@ import org.springframework.beans.factory.FactoryBean;
  * @Description 生成远程调用接口的代理bean
  */
 @Slf4j
-public class RpcClientFactoryBean implements FactoryBean {
-    private Class<?> interClass;
+public class RpcClientFactoryBean<T> implements FactoryBean<T> {
+    private Class<T> interClass;
 
     public RpcClientFactoryBean() {
     }
 
-//    public RpcClientFactoryBean(Class<?> interClass) {
-//        log.debug("RpcClientFactoryBean代理接口名:{}", interClass);
-//        this.interClass = interClass;
-//    }
-
-    public RpcClientFactoryBean(String s) throws ClassNotFoundException {
-        log.debug("----FactoryBean----:{}", s);
-        interClass = this.getClass().getClassLoader().loadClass(s);
+    public RpcClientFactoryBean(Class<T> interClass) throws ClassNotFoundException {
+        log.debug("调RpcClientFactoryBean的构造函数, {}", interClass);
+        this.interClass = interClass;
     }
 
     @Override
-    public Object getObject() throws Exception {
-        log.debug("RpcClientFactoryBean getBean");
-        return ProxyFactory.createProxy(interClass);
+    public T getObject() throws Exception {
+        log.debug("调用RpcClientFactoryBean获取Bean, getBean({})", interClass);
+        return (T) ProxyFactory.createProxy(interClass);
     }
 
     @Override
-    public Class<?> getObjectType() {
+    public Class<T> getObjectType() {
         return interClass;
     }
 }

@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @RpcClientScan(values = {"com.example.test.service"})
 public class Client {
-
     public static void main(String[] args) {
         SpringApplication.run(Client.class, args);
     }

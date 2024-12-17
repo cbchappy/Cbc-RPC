@@ -19,9 +19,10 @@ public class ProxyFactory{
     //通过负载均衡获取server
     //封装请求调用
     //注意唯一消息id
-    public static Object createProxy(Class<?> interfaceClass){
-        log.debug("--createProxy--");
-        return Proxy.newProxyInstance(ProxyFactory.class.getClassLoader(),
+    public static <T> T createProxy(Class<T> interfaceClass){
+        log.debug("调用createProxy创建代理, {}", interfaceClass);
+
+        return (T) Proxy.newProxyInstance(ProxyFactory.class.getClassLoader(),
                 new Class[]{interfaceClass}, new ProxyInvocationHandler());
     }
 

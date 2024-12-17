@@ -8,9 +8,11 @@ import com.example.rpcclient.spring.annotation.RpcInvoke;
  * @Description
  */
 @RpcInvoke
-public interface TestServer {
-
+public interface TestRpc {
     String get();
 
-    String error(String v);
+    String error(String s);
 }
+
+
+// String error(String v);

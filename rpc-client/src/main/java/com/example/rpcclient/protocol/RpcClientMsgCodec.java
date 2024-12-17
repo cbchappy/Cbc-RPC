@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * @Author Cbc
  * @DateTime 2024/12/8 16:40
- * @Description 信息解码和编码端   协议格式: 魔数(4) 版本号(1) 消息id(4) 序列化方式(1) 请求类型(1) 对齐填充(1) 长度(4)
+ * @Description 信息解码和编码端   协议格式: 魔数(4) 版本号(1)请求类型(1) 序列化方式(1) 对齐填充(1) 长度(4)
  */
 @Slf4j
 public class RpcClientMsgCodec extends ByteToMessageCodec<RpcMsg> {
