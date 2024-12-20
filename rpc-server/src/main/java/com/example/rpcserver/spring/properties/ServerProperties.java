@@ -51,6 +51,7 @@ public class ServerProperties implements InitializingBean {
             private String group;
             private String cluster;
             private String serverName;
+            private Double weight;
         }
     }
 
@@ -72,6 +73,7 @@ public class ServerProperties implements InitializingBean {
                REGISTRY_IP = registry.ip == null ? REGISTRY_IP : registry.ip;
                REGISTRY_PORT = registry.port == null ? REGISTRY_PORT : registry.port;
                CLUSTER_NAME = registry.cluster == null ? CLUSTER_NAME : registry.cluster;
+               WEIGHT = registry.weight == null ? WEIGHT : registry.weight;
             }
         }
         if(connect != null){

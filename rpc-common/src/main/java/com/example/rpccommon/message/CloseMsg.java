@@ -1,7 +1,9 @@
 package com.example.rpccommon.message;
 
+import com.example.rpccommon.constants.RpcMsgTypeCode;
 import lombok.Builder;
 import lombok.Data;
+
 
 /**
  * @Author Cbc
@@ -10,6 +12,7 @@ import lombok.Data;
  */
 
 public class CloseMsg extends RpcMsg{
+
     private final Integer status; //0   正常关闭    1.协议错误      2.服务端不接受连接 应该刷新instances  重新获取服务
 
     public Integer getStatus() {
@@ -18,6 +21,11 @@ public class CloseMsg extends RpcMsg{
 
     public CloseMsg(CloseStatus closeStatus){
         this.status = closeStatus.code;
+    }
+
+    @Override
+    public int getTypeCode() {
+        return RpcMsgTypeCode.CLOSE;
     }
 
     public enum CloseStatus{

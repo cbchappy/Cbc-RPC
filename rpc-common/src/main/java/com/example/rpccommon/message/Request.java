@@ -1,5 +1,6 @@
 package com.example.rpccommon.message;
 
+import com.example.rpccommon.constants.RpcMsgTypeCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -59,6 +60,11 @@ public class Request extends RpcMsg{
 
     public static Builder builder(){
         return new Builder();
+    }
+
+    @Override
+    public int getTypeCode() {
+        return RpcMsgTypeCode.REQUEST;
     }
 
     public static class Builder{

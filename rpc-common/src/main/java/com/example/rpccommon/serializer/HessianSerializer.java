@@ -16,6 +16,8 @@ import java.io.IOException;
  */
 @Slf4j
 public class HessianSerializer extends RpcSerializer{
+
+    private HessianSerializer(){}
     @Override
     public byte[] serialize(Object obj) {
         log.debug("Hessian方式序列化");
@@ -33,18 +35,26 @@ public class HessianSerializer extends RpcSerializer{
     }
 
     @Override
-    public Object deSerialize(byte[] bytes) {
+    public <T> T deSerialize(byte[] bytes, Class<T> clazz) {
         log.debug("Hessian方式反序列化");
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
         Hessian2Input hip = new Hessian2Input(bis);
         try {
             Object o = hip.readObject();
             hip.close();
-            return o;
+            return (T) o;
         } catch (IOException e) {
             log.error("反序列化成功");
             throw new RuntimeException(e);
         }
 
+    }
+    //单例模式
+    public static HessianSerializer getInstance(){
+        return Singleton.serializer;
+    }
+
+    private static class Singleton{
+        public static HessianSerializer serializer = new HessianSerializer();
     }
 }

@@ -1,22 +1,89 @@
 package com.example.test;
 
+import com.alibaba.fastjson.JSON;
 import com.example.rpcclient.proxy.ProxyFactory;
 import com.example.test.service.TestRpc;
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @Author Cbc
  * @DateTime 2024/12/10 18:03
- * @Description
+ * @Description test
  */
 @Slf4j
 public class TestClient {
 
     public static void main(String[] args) throws InterruptedException {
-        //直接调用代理工厂生成要远程调用接口的代理实例即可
-        TestRpc proxy = (TestRpc) ProxyFactory.createProxy(TestRpc.class);
-        String s = proxy.get();//直接调用方法便可进行远程调用
-        log.debug(s);
+        TestRpc proxy = ProxyFactory.createProxy(TestRpc.class);
+        for (int i = 0; i < 5; i++) {
+            log.debug("res:{}", proxy.get());
+        }
     }
+
+
+
+    public class MyThreadFactory implements ThreadFactory{
+        AtomicInteger integer = new AtomicInteger(0);
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = new Thread(r);
+            thread.setName("cbcThread-" + integer.getAndIncrement());
+            return thread;
+        }
+    }
+
+    public static class P extends Thread{
+        private Semaphore l;
+        private Semaphore r;
+        private String n;
+        private int num = 0;
+        @Override
+        public void run() {
+            try {
+               while (num < 5){
+                   l.acquire();
+                   r.acquire();
+                   System.out.println("<-->"+ n +"<-->");
+                   l.release();
+                   r.release();
+                   Thread.sleep(1000);
+                   num++;
+               }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        public P(Semaphore l, Semaphore r, String n){
+            this.l = l;
+            this.r = r;
+            this.n = n;
+        }
+
+
+    }
+
+
+    public static enum Te{
+        A,
+        B;
+
+        public void p(){
+            System.out.println("llll");
+        }
+    }
+
+
+
 
 }

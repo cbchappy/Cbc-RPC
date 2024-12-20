@@ -11,6 +11,11 @@ import java.io.*;
  */
 @Slf4j
 public class JavaSerializer extends RpcSerializer{
+
+    private JavaSerializer(){
+
+    }
+
     @Override
     public byte[] serialize(Object obj) {
         log.debug("jdk方式序列化");
@@ -26,15 +31,24 @@ public class JavaSerializer extends RpcSerializer{
     }
 
     @Override
-    public Object deSerialize(byte[] bytes) {
+    public  <T> T deSerialize(byte[] bytes, Class<T> clazz){
         log.debug("jdk方式反序列化");
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
         try (ObjectInputStream ois = new ObjectInputStream(bis)) {
-            return ois.readObject();
+            return (T) ois.readObject();
         }catch (Exception e){
             log.error("反序列化失败");
             e.printStackTrace();
             throw new RuntimeException("java字节流反序列化出错");
         }
     }
+
+    public static JavaSerializer getInstance(){
+        return Singleton.serializer;
+    }
+
+    private static class Singleton{
+        public static JavaSerializer serializer = new JavaSerializer();
+    }
+
 }

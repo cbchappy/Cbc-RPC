@@ -38,7 +38,7 @@ public class RpcServerMsgCodec extends ByteToMessageCodec<RpcMsg> {
         //版本号 1
         out.writeByte(ProtocolConfig.getVersion());
         //请求类型 1
-        Integer msgTypeCode = RpcMsg.getTypeCode(msg);
+        int msgTypeCode = msg.getTypeCode();
         out.writeByte(msgTypeCode);
         //序列化方式 1
         out.writeByte(serializerTypeCode);
@@ -91,12 +91,11 @@ public class RpcServerMsgCodec extends ByteToMessageCodec<RpcMsg> {
                 magic, version, msgTypeCode, serializerTypeCode, len);
 
         RpcSerializer serializer = RpcSerializer.getSerializerByCode(serializerTypeCode);
-        Object o = serializer.deSerialize(bytes);
+        Class<?> aClass = RpcMsg.getClassByTypeCode(msgTypeCode);
+        Object o = serializer.deSerialize(bytes, aClass);
 
-        //todo delete
-        //in.release(); 释放ByteBuf导致对象无法发送到后面的处理器 估计是netty自己会释放ByteBuf
 
-        out.add(RpcMsg.typeConversion(o, msgTypeCode));
+        out.add(o);
 
     }
 }

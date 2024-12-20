@@ -4,6 +4,7 @@ import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.example.rpcserver.config.ServerConfig;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,8 +34,12 @@ public class Registry {
 
         namingService = NamingFactory.createNamingService(properties);
 
-
-        namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME , REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
+        Instance instance = new Instance();
+        instance.setClusterName(CLUSTER_NAME);
+        instance.setIp(REGISTRY_IP);
+        instance.setPort(REGISTRY_PORT);
+        instance.setWeight(WEIGHT);
+        namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME , instance);
         log.debug("注册服务到nacos, serverName:{}, groupName:{}, ip:{}, port:{}, cluster:{}",
                 REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
 

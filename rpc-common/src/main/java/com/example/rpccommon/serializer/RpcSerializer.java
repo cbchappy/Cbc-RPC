@@ -17,25 +17,20 @@ import java.util.Map;
  */
 public abstract class RpcSerializer {
 
-    private final static Map<Integer, RpcSerializer> map = new HashMap<>();
     public abstract byte[] serialize(Object obj);
 
-    public abstract Object deSerialize(byte[] bytes);
+    public abstract <T> T deSerialize(byte[] bytes, Class<T> clazz);
 
+    //单例模式
     public static RpcSerializer getSerializerByCode(int code){
-        if(map.containsKey(code)){
-            return map.get(code);
-        }
-        if(code == SerializerCode.JDK){
-            map.put(code, new JavaSerializer());
-        } else if (code == SerializerCode.HESSIAN) {
-            map.put(code, new HessianSerializer());
-        } else if (code == SerializerCode.JSON) {
-            map.put(code, new JsonSerializer());
-        }else {
+            if(code == SerializerCode.JDK){
+               return JavaSerializer.getInstance();
+            } else if (code == SerializerCode.HESSIAN) {
+                return HessianSerializer.getInstance();
+            } else if (code == SerializerCode.JSON) {
+                return JsonSerializer.getInstance();
+            }
             throw new RpcCommonException(RpcExceptionMsg.SERIALIZER_NOTFOUND);
-        }
-        return map.get(code);
     }
 
 

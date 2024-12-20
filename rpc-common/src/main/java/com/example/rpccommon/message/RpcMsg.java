@@ -6,6 +6,8 @@ import com.example.rpccommon.exception.RpcCommonException;
 import com.example.rpccommon.exception.RpcRequestException;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -14,43 +16,26 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Description
  */
 public abstract class RpcMsg implements Serializable {
+    private final static Map<Integer, Class<?>> CLASS_MAP = new HashMap<>();
 
-
-    private static final AtomicInteger generateId = new AtomicInteger(Integer.MIN_VALUE);
-    //获取请求类型号码 0 request  1 response 2....
-    public static Integer getTypeCode(Object obj) {
-        if (obj instanceof Request) {
-            return RpcMsgTypeCode.REQUEST;
-        } else if (obj instanceof Response) {
-            return RpcMsgTypeCode.RESPONSE;
-        } else if (obj instanceof PingMsg) {
-            return RpcMsgTypeCode.PINGMSG;
-        }else if(obj instanceof CloseMsg){
-            return RpcMsgTypeCode.CLOSE;
-        }
-        throw new RpcCommonException("消息类型错误");
+    static {
+        CLASS_MAP.put(RpcMsgTypeCode.CLOSE, CloseMsg.class);
+        CLASS_MAP.put(RpcMsgTypeCode.REQUEST, Request.class);
+        CLASS_MAP.put(RpcMsgTypeCode.PINGMSG, PingMsg.class);
+        CLASS_MAP.put(RpcMsgTypeCode.RESPONSE, Response.class);
     }
+
+
+    private static final AtomicInteger generateId = new AtomicInteger(Integer.MIN_VALUE);//自增, 维护唯一id
+    public abstract int getTypeCode();
 
     public static Integer generateId(){
         return generateId.incrementAndGet();
     }
 
 
-    public static RpcMsg typeConversion(Object o, int code){
-        if(code == RpcMsgTypeCode.REQUEST){
-            return (Request) o;
-        } else if (code == RpcMsgTypeCode.RESPONSE) {
-            return (Response) o;
-        }else if(code == RpcMsgTypeCode.PINGMSG){
-            return (PingMsg) o;
-        } else if (code == RpcMsgTypeCode.CLOSE) {
-            return (CloseMsg) o;
-        }
-        throw new RpcCommonException(RpcExceptionMsg.MESSAGE_CONVERSION_ERROR);
+    public static Class<?> getClassByTypeCode(int code){
+        return CLASS_MAP.get(code);
     }
-
-
-
-
 
 }

@@ -30,7 +30,7 @@ public class RpcClientMsgCodec extends ByteToMessageCodec<RpcMsg> {
         out.writeInt(ProtocolConfig.getMagic());//
         out.writeByte(ProtocolConfig.getVersion());
         //请求类型 1
-        Integer msgTypeCode = RpcMsg.getTypeCode(msg);
+        int msgTypeCode = msg.getTypeCode();
         out.writeByte(msgTypeCode);
         //序列化方式 1
         byte serializerTypeCode = ClientConfig.SERIALIZER_TYPE_CODE.byteValue();
@@ -72,9 +72,10 @@ public class RpcClientMsgCodec extends ByteToMessageCodec<RpcMsg> {
         in.readBytes(bytes, 0, len);
 
         RpcSerializer serializer = RpcSerializer.getSerializerByCode(serializerTypeCode);
-        Object o = serializer.deSerialize(bytes);
+        Class<?> aClass = RpcMsg.getClassByTypeCode(msgTypeCode);
+        Object o = serializer.deSerialize(bytes, aClass);
 
-        out.add(RpcMsg.typeConversion(o, msgTypeCode));
+        out.add(o);
 
         log.debug("解码, magic:{}, version:{}, msgTypeCode:{}, serializerTypeCode:{}, len:{}",
                 magic, version, msgTypeCode, serializerTypeCode, len);

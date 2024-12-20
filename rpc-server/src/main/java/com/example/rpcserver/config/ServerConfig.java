@@ -14,6 +14,8 @@ public class ServerConfig {
 
     public static Integer REGISTRY_PORT = 8080;//开放端口
 
+    public static Double WEIGHT = 1.0;
+
     public static String GROUP_NAME = "DEFAULT_GROUP";//nacos的组名
 
     public static String CLUSTER_NAME = "DEFAULT";//注册的集群名

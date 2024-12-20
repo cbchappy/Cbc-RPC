@@ -12,12 +12,13 @@ import java.nio.charset.StandardCharsets;
 /**
  * @Author Cbc
  * @DateTime 2024/12/7 19:17
- * @Description json序列化 类似数组参数仍然会有风险！！！
+ * @Description json序列化 记得在要序列化属性加上setter和getter方法
  */
 //todo json序列化容易出bug
 @Slf4j
 public class JsonSerializer extends RpcSerializer {
 
+    private JsonSerializer(){}
 
     @Override
     public byte[] serialize(Object obj) {
@@ -29,28 +30,28 @@ public class JsonSerializer extends RpcSerializer {
     }
 
     @Override
-    public Object deSerialize(byte[] bytes) {
+    public <T> T deSerialize(byte[] bytes, Class<T> clazz){
         log.debug("json方式反序列化");
         String json = new String(bytes, StandardCharsets.UTF_8);
 
         JSONObject jo = JSON.parseObject(json);
 
-        if (jo.getInnerMap().containsKey("status") && jo.getInnerMap().containsKey("msgId")) {
-            return deSerializedResponse(jo);
-        } else if (jo.getInnerMap().containsKey("msgId")) {
-            return deSerializedRequest(jo);
-        } else if (jo.getInnerMap().containsKey("status")) {
-            return jo.toJavaObject(CloseMsg.class);
+
+        if (clazz.equals(Response.class)) {
+            return (T) deSerializedResponse(jo);
+        } else if (clazz.equals(Request.class)) {
+            return (T) deSerializedRequest(jo);
+        } else if (clazz.equals(CloseMsg.class)) {
+            return jo.toJavaObject(clazz);
         }
 
-        return jo.toJavaObject(PingMsg.class);
+        return jo.toJavaObject(clazz);
     }
 
     private static Response deSerializedResponse(JSONObject jo) {
         Response rsp = jo.toJavaObject(Response.class);
 
-        if (rsp.getRes() instanceof JSONObject) {
-            JSONObject r = (JSONObject) rsp.getRes();
+        if (rsp.getRes() instanceof JSONObject r) {
             try {
                 rsp.setRes(r.toJavaObject(Class.forName(rsp.getResClassName())));
             } catch (ClassNotFoundException e) {
@@ -80,5 +81,14 @@ public class JsonSerializer extends RpcSerializer {
         }
 
         return rqs;
+    }
+
+
+    public static JsonSerializer getInstance(){
+        return Singleton.serializer;
+    }
+
+    private static class Singleton{
+        public static JsonSerializer serializer = new JsonSerializer();
     }
 }

@@ -1,6 +1,7 @@
 package com.example.rpccommon.message;
 
 
+import com.example.rpccommon.constants.RpcMsgTypeCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,6 +31,8 @@ public class Response extends RpcMsg{
     private String resClassName;
 
 
-
-
+    @Override
+    public int getTypeCode() {
+        return RpcMsgTypeCode.RESPONSE;
+    }
 }
