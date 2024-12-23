@@ -55,10 +55,6 @@ public class RpcClientMsgCodec extends ByteToMessageCodec<RpcMsg> {
 
         int magic = in.readInt();
         byte version = in.readByte();
-        if(magic != ProtocolConfig.getMagic() || version != ProtocolConfig.getVersion()){
-            log.debug("校验失败");
-            throw new RpcResponseException(RpcExceptionMsg.VERIFY_ERROR);
-        }
 
         byte msgTypeCode = in.readByte();//根据消息类型进行相应处理 1
 

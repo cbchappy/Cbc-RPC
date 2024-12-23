@@ -14,7 +14,7 @@ public class ServerConfig {
 
     public static Integer REGISTRY_PORT = 8080;//开放端口
 
-    public static Double WEIGHT = 1.0;
+    public static Double WEIGHT = 1.0;//服务器权重
 
     public static String GROUP_NAME = "DEFAULT_GROUP";//nacos的组名
 
@@ -32,7 +32,7 @@ public class ServerConfig {
 
     public static Integer WORK_THREAD_NUM = 3;//netty的workers线程数
 
-    public static Integer FUSING_START_NUM = 30;//熔断开始计算的最小连接数
+    public static Integer FUSING_START_NUM = 30;//熔断开始计算的最小请求服务器次数
 
     public static Double FUSING_DIVISOR = 0.3;//熔断因子
 

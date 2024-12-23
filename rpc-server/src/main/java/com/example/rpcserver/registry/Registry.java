@@ -21,7 +21,7 @@ import static com.example.rpcserver.config.ServerConfig.*;
 public class Registry {
 
     private static NamingService namingService;
-
+    private static Instance instance;
 
    //注册服务到nacos
     public static void registryServer() throws NacosException {
@@ -34,14 +34,14 @@ public class Registry {
 
         namingService = NamingFactory.createNamingService(properties);
 
-        Instance instance = new Instance();
+         instance = new Instance();
         instance.setClusterName(CLUSTER_NAME);
         instance.setIp(REGISTRY_IP);
         instance.setPort(REGISTRY_PORT);
         instance.setWeight(WEIGHT);
         namingService.registerInstance(REGISTRY_SERVER_NAME, GROUP_NAME , instance);
-        log.debug("注册服务到nacos, serverName:{}, groupName:{}, ip:{}, port:{}, cluster:{}",
-                REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
+        log.debug("注册服务到nacos, serverName:{}, groupName:{}, ip:{}, port:{}, cluster:{}, weight:{}",
+                REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME, WEIGHT);
 
 
     }
@@ -52,7 +52,7 @@ public class Registry {
     public static void removeRegistry() throws NacosException {
         log.debug("从nacos移除服务, serverName:{}, groupName:{}, ip:{}, port:{}, cluster:{}",
                 REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
-        namingService.deregisterInstance(REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
+        namingService.deregisterInstance(REGISTRY_SERVER_NAME, instance);
     }
 
 }

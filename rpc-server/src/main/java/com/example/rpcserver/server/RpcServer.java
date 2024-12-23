@@ -172,6 +172,8 @@ public class RpcServer {
 
                 NioEventLoopGroup executors = new NioEventLoopGroup(1);
                 stopServer();
+
+                //定时重启服务进行测试
                 executors.schedule(() -> {
                     try {
                         startServer();
