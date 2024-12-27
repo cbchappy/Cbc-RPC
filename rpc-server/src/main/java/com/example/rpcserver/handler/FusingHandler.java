@@ -22,7 +22,6 @@ public class FusingHandler extends ChannelInboundHandlerAdapter {
             ctx.channel().writeAndFlush(new CloseMsg(CloseMsg.CloseStatus.refuse));
             ctx.channel().close();
             log.debug("熔断已开启, 拒绝连接");
-
             return;
         }
         RpcServer.countAdd();

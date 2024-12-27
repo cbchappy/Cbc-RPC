@@ -14,7 +14,7 @@ import java.net.SocketAddress;
 /**
  * @Author Cbc
  * @DateTime 2024/12/10 13:09
- * @Description
+ * @Description 进行读空闲处理, 断开空闲过久的连接
  */
 @Slf4j
 public class ReadIdleStateEventHandler extends ChannelDuplexHandler {

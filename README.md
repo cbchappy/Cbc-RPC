@@ -41,14 +41,15 @@
 |           (length = DataLength)                 |  
 +-------------------------------------------------+                                               
 ```
-名词                             解释
-Magic Number          魔数, 表明这是自定义的rpc协议
-Version Number        版本号, rpc协议的版本  
-Package Type             消息包的类型  
-Serializer Type           采用的序列化方式  
-Align fill                       对齐填充, 加快读取 
-DataLength                消息内容的长度
-Data bytes                  消息内容, 长度为DataLength  
+|       名字        |         解释          |
+|:---------------:|:-------------------:|                         
+|  Magic Number   |  魔数, 表明这是自定义的rpc协议  |
+| Version Number  |    版本号, rpc协议的版本    |  
+|  Package Type   |       消息包的类型        |
+ | Serializer Type |      采用的序列化方式       |
+  |   Align fill    |     对齐填充, 加快读取      | 
+  |   DataLength    |       消息内容的长度       |
+|   Data bytes    | 消息内容, 长度为DataLength |  
 
 ## 快速上手
 
@@ -73,7 +74,7 @@ Data bytes                  消息内容, 长度为DataLength
 public class TestServer {
 
     public static void main(String[] args) throws Exception {
-        RpcServer.openServiceImpl(TestRpcImpl.class);//开放远程调用接口的实现类
+        RpcServer.openServiceImpl(TestRpcImpl.class, TestRpc.class);//开放远程调用接口的实现类
         RpcServer.startServer();//开启远程调用服务
     }
     
@@ -100,8 +101,8 @@ public class TestClient {
 
 ```java
 @SpringBootApplication
-@StartRpcServer(values = {"com.example.test.service"})//添加@StartRpcServer注解, 指明远程调用接口所在的包
-public class Server {
+@StartRpcServer(values = {"com.example.test.service"})//启动类上添加@StartRpcServer注解, 指明远程调用接口所在的包
+public class SpringTestServer {
     public static void main(String[] args) {
         SpringApplication.run(Server.class, args);
     }
@@ -122,8 +123,8 @@ public class TestRpcImpl implements TestRpc {
 
 ```java
 @SpringBootApplication
-@RpcClientScan(values = {"com.example.test.service"})//添加@RpcClientScan注解, 指明远程调用接口所在的包
-public class Client {
+@RpcClientScan(values = {"com.example.test.service"})//启动类上添加这个注解,并指明接口所在的包
+public class SpringTestClient {
     public static void main(String[] args) {
         SpringApplication.run(Client.class, args);
     }

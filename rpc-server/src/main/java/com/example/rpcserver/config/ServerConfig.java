@@ -4,7 +4,7 @@ package com.example.rpcserver.config;
 /**
  * @Author Cbc
  * @DateTime 2024/12/8 21:13
- * @Description
+ * @Description 服务总配置
  */
 
 public class ServerConfig {
@@ -22,9 +22,9 @@ public class ServerConfig {
 
     public static String REGISTRY_SERVER_NAME = "test_server";//注册服务名
 
-    public static String USERNAME = "nacos";//服务端账号名
+    public static String USERNAME = "nacos";//nacos服务端账号名
 
-    public static String PASSWORD = "nacos";//服务端密码
+    public static String PASSWORD = "nacos";//nacos服务端密码
 
     public static Integer READ_IDLE_TIME = 5;//最大读空闲时间, 时间单位为秒
 
@@ -36,7 +36,7 @@ public class ServerConfig {
 
     public static Double FUSING_DIVISOR = 0.3;//熔断因子
 
-    public static Integer FUSING_RESTART_TIME = 60 * 60; //单位为秒
+    public static Integer FUSING_RESTART_TIME = 60 * 60; //熔断持续时间, 结束后重新开启服务
 
 
 }

@@ -66,8 +66,6 @@ public class RpcServerMsgCodec extends ByteToMessageCodec<RpcMsg> {
         byte version = in.readByte();//版本
 
 
-
-
         //校验失败
         if(magic !=  ProtocolConfig.getMagic() || version != ProtocolConfig.getVersion()){
             log.error("协议校验失败, 关闭channel");

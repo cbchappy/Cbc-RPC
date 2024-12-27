@@ -38,10 +38,6 @@
             <version>${nacos.version}</version>
         </dependency>
 
-
-
-
-
     </dependencies>
 
 

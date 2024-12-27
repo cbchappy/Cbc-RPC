@@ -1,6 +1,7 @@
 package com.example.test.service;
 
-import com.example.rpcclient.spring.annotation.RpcInvoke;
+
+import com.example.client.spring.annotation.RpcInvoke;
 
 /**
  * @Author Cbc
