@@ -6,10 +6,7 @@ import com.example.test.service.TestRpc;
 import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -24,8 +21,10 @@ public class TestClient {
 
     public static void main(String[] args) throws InterruptedException {
         TestRpc proxy = ProxyFactory.createProxy(TestRpc.class);
-        for (int i = 0; i < 5; i++) {
-            log.debug("res:{}", proxy.get());
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 10,
+                1000, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+        for (int i = 0; i < 200; i++) {
+            executor.execute(proxy::get);
         }
     }
 

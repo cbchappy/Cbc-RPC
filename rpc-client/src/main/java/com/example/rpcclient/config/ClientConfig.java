@@ -38,6 +38,8 @@ public class ClientConfig {
 
     public static Integer OVERTIME = 10;//单个请求超时时间 单位为秒
 
+    public static Boolean MONITOR_LOG = true;//服务实例信息详细监控日志
+
 
 
 }

@@ -34,6 +34,7 @@ public class ClientProperties implements InitializingBean {
         private Boolean longConnection;
         private Integer retryNum;
         private Integer overTime;
+        private Boolean monitorLog;
     }
 
     @Data
@@ -83,6 +84,7 @@ public class ClientProperties implements InitializingBean {
             LONG_CONNECTION = connect.longConnection == null ? LONG_CONNECTION : connect.getLongConnection();
             RETRY_NUM = connect.retryNum == null ? RETRY_NUM : connect.retryNum;
             OVERTIME = connect.overTime == null ? OVERTIME : connect.overTime;
+            MONITOR_LOG = connect.monitorLog == null ? MONITOR_LOG : connect.monitorLog;
         }
     }
 }

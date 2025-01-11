@@ -15,10 +15,7 @@ import java.lang.reflect.Proxy;
  */
 @Slf4j
 public class ProxyFactory{
-    //复用channel 减少连接次数
-    //通过负载均衡获取server
-    //封装请求调用
-    //注意唯一消息id
+
     public static <T> T createProxy(Class<T> interfaceClass){
         log.debug("调用createProxy创建代理, {}", interfaceClass);
 

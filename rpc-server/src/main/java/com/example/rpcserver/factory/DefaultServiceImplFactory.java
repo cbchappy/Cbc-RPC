@@ -25,7 +25,7 @@ public class DefaultServiceImplFactory implements ServiceImplFactory{
     public void openServiceImpl(Class<?> implClass, Class<?> interfaceClass) throws IOException {
         String classPath = getClassPath(implClass);
 
-        log.debug("进行ISP注册, 接口名:{}, 实现类名:{}", interfaceClass, implClass);
+        log.debug("进行SPI注册, 接口名:{}, 实现类名:{}", interfaceClass, implClass);
 
         File dir = new File(classPath, "META-INF/services");
         if (!dir.exists()) {

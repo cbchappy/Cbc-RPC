@@ -15,10 +15,8 @@ import com.example.rpcclient.blance.RoundRobinLoadBalance;
 import com.example.rpcclient.blance.WeightLoadBalance;
 import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.constants.FaultTolerantCode;
-import com.example.rpcclient.handler.ReadIdleStateEventHandler;
-import com.example.rpcclient.handler.ResponseHandler;
-import com.example.rpcclient.handler.ServerCloseHandler;
-import com.example.rpcclient.handler.WriteIdleEventHandler;
+import com.example.rpcclient.handler.*;
+import com.example.rpcclient.monitor.MonitorHandler;
 import com.example.rpcclient.protocol.RpcClientMsgCodec;
 import com.example.rpcclient.tolerant.FaultTolerant;
 import com.example.rpcclient.tolerant.RetryFaultTolerant;
@@ -45,8 +43,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static com.example.rpcclient.config.ClientConfig.*;
 import static com.example.rpcclient.constants.LoadBalanceTypeCode.*;
+import static com.example.rpcclient.server.InstanceService.getAvailableServer;
 
-
+//提供拓展点
+//监控:单个实例->地址 名字 速度 出错次数 访问次数 是否可用 刷新速度
 /**
  * @Author Cbc
  * @DateTime 2024/12/9 14:15
@@ -58,38 +58,9 @@ public class ServerCenter {
     //todo 更新instance也要更新channelMap 处理掉弃用的连接
     private static final Map<Instance, Channel> channelMap = new ConcurrentHashMap<>();//根据实例存储channel 进行channel复用
 
-    private static volatile NamingService namingService;//nacos总服务端
-
-    private static volatile List<Instance> instances;//获取到的所有服务实例
-
-    //todo delete
-    public final static AtomicInteger all = new AtomicInteger(0);//计数
-
-    //todo delete
-    public final static Map<String, AtomicInteger> countMap = new ConcurrentHashMap<>(7);//计数
-
-    private final static ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();//instances的读写锁
-
-    private final static LoadBalance LOAD_BALANCE;//根据配置文件获取负载均衡实例
 
     private final static FaultTolerant FAULT_TOLERANT;//根据配置文件获取容错处理实例
 
-    static {
-        if(RANDOM_LOAD_BALANCE == LOAD_BALANCE_CODE){
-            LOAD_BALANCE = new RandomLoadBalance();
-            log.debug("开启随机策略");
-        } else if (WEIGHT_LOAD_BALANCE == LOAD_BALANCE_CODE) {
-            LOAD_BALANCE = new WeightLoadBalance();
-            log.debug("开启权重策略");
-        } else if (ROUND_ROBIN_LOAD_BALANCE == LOAD_BALANCE_CODE) {
-            log.debug("开启轮询策略");
-            LOAD_BALANCE = new RoundRobinLoadBalance();
-        }else {
-            log.debug("开启轮询策略");
-            LOAD_BALANCE = new RoundRobinLoadBalance();
-            throw new RpcException(RpcExceptionMsg.LOAD_BALANCE_NOT_FOUND);
-        }
-    }//初始化负载均衡类
 
     static {
        if (FAULT_TOLERANT_CODE == FaultTolerantCode.RETRY) {
@@ -100,137 +71,64 @@ public class ServerCenter {
         }
     }//初始化容错处理类
 
-    //服务发现 只启动一次
-    private static void findServer() throws NacosException {
-        log.debug("启动服务发现");
+    static {
+        InstanceService.addUpdateInstancesConsumer((o, n) -> {
+            channelMap.keySet().removeIf(next -> !n.contains(next));
+        });
+    }//在instances更新时弃用掉不健康的连接
 
-        if(namingService == null){
-
-            synchronized (ServerCenter.class){
-                if(namingService != null){
-                    return;
-                }
-                Properties properties = new Properties();
-                properties.setProperty(PropertyKeyConst.SERVER_ADDR, ClientConfig.SERVER_ADDR);
-                properties.setProperty(PropertyKeyConst.PASSWORD, ClientConfig.PASSWORD);
-                properties.setProperty(PropertyKeyConst.USERNAME, ClientConfig.USERNAME);
-
-                namingService = NamingFactory.createNamingService(properties);
-
-                log.debug("ClientConfig.SERVER_ADDR:{}", ClientConfig.SERVER_ADDR);
-
-                instances = namingService.selectInstances(SERVER_NAME, SERVER_GROUP_NAME, SERVER_CLUSTER_NAME,true);
-                log.debug("服务发现个数:{}", instances.size());
-                if(instances == null || instances.size() == 0){
-                    throw new RpcException(RpcExceptionMsg.NOT_FOUND_SERVER);
-                }
-                listenServer();
-
-            }
-
+    static {
+        if(MONITOR_LOG){
+            log.debug("开启服务实例信息详细监控");
+            MonitorHandler monitorHandler = new MonitorHandler();
+            AfterResponseDoHandler.addAfterResponseHandler(monitorHandler);
+            BeforeEncodeDoHandler.addBeforeEncodeHandler(monitorHandler);
         }
-
-
-
-    }
-
-    //监听服务实例变化
-    private static void listenServer() throws NacosException {
-
-        final ExecutorService executorService = Executors.newFixedThreadPool(1);
-
-        EventListener serviceListener = new AbstractEventListener() {
-            @Override
-            public void onEvent(Event event) {
-                if (event instanceof NamingEvent namingEvent) {
-                    List<Instance> list = namingEvent.getInstances();
-                    List<Instance> collect = list.stream().filter(Instance::isHealthy).toList();
-                    if(collect.size() == 0){
-                        throw new RpcException(RpcExceptionMsg.NOT_FOUND_SERVER);
-                    }
-                    log.debug("服务实例发生变化, 现有健康服务个数为:{}", collect.size() );
-                    updateInstances(collect);
-                }
-            }
-            @Override
-            public Executor getExecutor() {
-                return executorService;
-            }
-        };
-        namingService.subscribe(SERVER_NAME, SERVER_GROUP_NAME, SERVER_CLUSTER_NAME, serviceListener);
-    }
-
-    //更新实例 线程安全
-    private static void updateInstances(List<Instance> list){
-        rwl.writeLock().lock();
-        HashSet<Instance> set = new HashSet<>(channelMap.keySet());
-        set.forEach(ServerCenter::stopChannel);
-        instances = list;
-        for (Instance instance : list) {
-           if(countMap.get(instance.getInstanceId()) == null){
-               countMap.put(instance.getInstanceId(), new AtomicInteger());
-           }
-        }
-        log.debug("更新instances");
-        rwl.writeLock().unlock();
-    }
-
-    //获取负载均衡后的可用服务
-    private static Instance getAvailableServer(){
-        rwl.readLock().lock();
-        try {
-            return LOAD_BALANCE.loadBalancingAndGet(instances);
-        } finally {
-            rwl.readLock().unlock();
-        }
-    }
+    }//添加监控处理器
 
 
     //进行远程调用
     public static Object remoteInvoke(Request request) throws Throwable {
-        return remoteInvoke(request, null);
-    }
-    //进行远程调用
-    public static Object remoteInvoke(Request request, Instance instance) throws Throwable {
-        if(namingService == null){
-            findServer();
-        }
+        Instance instance = null;
+        try {
+           instance  = getAvailableServer();
 
-        if(instance == null){
-            instance = getAvailableServer();
-        }
-        Channel channel = getChannel(instance);
+            Channel channel = getChannel(instance);
 
-        DefaultPromise<Object> promise = new DefaultPromise<>(channel.eventLoop());
+            DefaultPromise<Object> promise = new DefaultPromise<>(channel.eventLoop());
 
-        ResponseHandler.getMap().put(request.getMsgId(), promise);
+            ResponseHandler.getMap().put(request.getMsgId(), promise);
 
-        MyCloseFutureListener listener = new MyCloseFutureListener(promise);
+            MyCloseFutureListener listener = new MyCloseFutureListener(promise);
 
-        channel.closeFuture().addListener(listener);
+            channel.closeFuture().addListener(listener);
 
-        //服务器应该发送关闭信息
-        //拒绝策略 0.协议错误导致关闭  1.熔断状态导致关闭  2.到达指定空闲时间导致主动关闭
-        //进行容错处理 三种状态应该更换服务器进行重试
-        //CloseMsg: status对应关闭理由
+            //服务器应该发送关闭连接信息
+            //拒绝策略 0.协议错误导致关闭  1.熔断状态导致关闭  2.到达指定空闲时间导致主动关闭
+            //进行容错处理 三种状态应该更换服务器进行重试
+            //CloseMsg: status对应关闭理由
 
-        channel.writeAndFlush(request);
+            channel.writeAndFlush(request);
 
-        promise.await(OVERTIME, TimeUnit.SECONDS);
+            promise.await(OVERTIME, TimeUnit.SECONDS);
 
-        channel.closeFuture().removeListener(listener);
+            channel.closeFuture().removeListener(listener);
 
-        if(!promise.isDone()){
-            log.debug("请求连接超时, msgId:{}", request.getMsgId());
-            promise.setFailure(new RuntimeException(RpcExceptionMsg.REQUEST_OVERTIME));
-        }
+            if(!promise.isDone()){
+                log.debug("请求连接超时, msgId:{}", request.getMsgId());
+                promise.setFailure(new RuntimeException(RpcExceptionMsg.REQUEST_OVERTIME));
+            }
 
-        if(promise.isSuccess()){
-            log.debug("MsgId{}:成功获取结果!!", request.getMsgId());
-            return promise.get();
-        } else {
-            log.debug("MsgId{}:进行容错处理", request.getMsgId());
-            return FAULT_TOLERANT.faultHandler(instance, promise.cause(), request);
+            if(promise.isSuccess()){
+                log.debug("MsgId{}:成功获取结果!!", request.getMsgId());
+                return promise.get();
+            } else {
+                log.debug("MsgId-{}:进行容错处理", request.getMsgId());
+                return FAULT_TOLERANT.faultHandler(instance, promise.cause(), request);
+            }
+        } catch (Exception e) {
+            log.debug("MsgId-{}:重大连接错误: 进行容错处理", request.getMsgId());
+            return FAULT_TOLERANT.faultHandler(instance, e, request);
         }
     }
     //channel复用
@@ -256,6 +154,10 @@ public class ServerCenter {
                             ch.pipeline().addLast(new RpcClientMsgCodec());//codec
                             ch.pipeline().addLast(new ServerCloseHandler());//服务器主动关闭处理器
                             ch.pipeline().addLast(new ResponseHandler());//响应处理器
+                            ch.pipeline().addLast(new AfterResponseDoHandler(instance));//响应后处理器
+                            ch.pipeline().addLast(new BeforeEncodeDoHandler(instance));//编码前处理器
+
+
                             //到达指定空闲时间触发事件
                             if(LONG_CONNECTION){
                                 ch.pipeline().addLast(new IdleStateHandler( CONNECT_IDLE_TIME, 0, 0, TimeUnit.SECONDS));

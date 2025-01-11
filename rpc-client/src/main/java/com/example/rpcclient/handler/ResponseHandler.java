@@ -40,6 +40,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
         if(Objects.equals(status, ResponseStatus.SUCCESS.code)){
             promise.setSuccess(msg.getRes());
+            ctx.fireChannelRead(msg);
             return;
         }
 
@@ -48,6 +49,8 @@ public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
         }else {
             promise.setFailure(new RpcResponseException(ResponseStatus.getEnumByCode(status)));
         }
+        ctx.fireChannelRead(msg);//将消息传播给下一个
+
 
     }
 }
