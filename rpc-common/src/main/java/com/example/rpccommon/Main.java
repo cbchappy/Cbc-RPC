@@ -5,9 +5,15 @@ import com.alibaba.fastjson.support.config.FastJsonConfig;
 import com.example.rpccommon.message.PingMsg;
 import com.example.rpccommon.message.Request;
 import com.example.rpccommon.serializer.JsonSerializer;
+import com.example.rpccommon.util.CommonUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,17 +25,18 @@ import java.util.List;
  */
 @Slf4j
 public class Main {
-    public static void main(String[] args) {
-        Object[] ar = {new ArrayList<>(), new int[]{0, 8, 9}};
-        Test t = new Test(ar);
-        String json = JSON.toJSONString(t);
-        System.out.println(json);
-        Test test = JSON.parseObject(json, Test.class);
-        Class[] paramTypes = test.paramTypes;
-        String[] strings = test.strings;
-        for (String string : strings) {
-            System.out.println(string);
-        }
+    public static void main(String[] args) throws Exception {
+
+//        URL url = Main.class.getResource("");
+//        System.out.println(url);
+//        System.out.println(url.getPath());
+//        System.out.println(url.getFile());
+//        File file = new File(url.getFile());
+//        for (int i = 0; i < 4; i++) {
+//            System.out.println(file.getPath());
+//            file = file.getParentFile();
+//        }
+        CommonUtil.printLogo();
 
     }
 

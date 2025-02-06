@@ -1,15 +1,13 @@
 package com.example.test;
 
-import com.alibaba.fastjson.JSON;
+
 import com.example.rpcclient.proxy.ProxyFactory;
 import com.example.test.service.TestRpc;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
+
 
 /**
  * @Author Cbc
@@ -21,11 +19,11 @@ public class TestClient {
 
     public static void main(String[] args) throws InterruptedException {
         TestRpc proxy = ProxyFactory.createProxy(TestRpc.class);
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 10,
-                1000, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-        for (int i = 0; i < 200; i++) {
-            executor.execute(proxy::get);
-        }
+//        ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 10,
+//                1000, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+//        for (int i = 0; i < 200; i++) {
+//            executor.execute(proxy::get);
+//        }
     }
 
 

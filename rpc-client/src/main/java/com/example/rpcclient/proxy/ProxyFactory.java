@@ -2,6 +2,7 @@ package com.example.rpcclient.proxy;
 
 import com.example.rpcclient.server.ServerCenter;
 import com.example.rpccommon.message.Request;
+import com.example.rpccommon.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
@@ -15,6 +16,9 @@ import java.lang.reflect.Proxy;
  */
 @Slf4j
 public class ProxyFactory{
+    static {
+        CommonUtil.printLogo();
+    }
 
     public static <T> T createProxy(Class<T> interfaceClass){
         log.debug("调用createProxy创建代理, {}", interfaceClass);

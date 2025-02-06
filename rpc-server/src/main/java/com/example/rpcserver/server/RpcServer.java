@@ -6,6 +6,7 @@ import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.example.rpccommon.protocol.ProtocolFrameDecoder;
+import com.example.rpccommon.util.CommonUtil;
 import com.example.rpcserver.config.ServerConfig;
 import com.example.rpcserver.factory.DefaultServiceImplFactory;
 import com.example.rpcserver.factory.ServiceImplFactory;
@@ -58,6 +59,10 @@ public class RpcServer {
     private static Instance instance;//服务实例
 
     private static ServiceImplFactory implFactory = new DefaultServiceImplFactory();//远程调用服务类实现工厂
+
+    static {
+        CommonUtil.printLogo();
+    }
 
     public static void setServiceImplFactory(ServiceImplFactory implFactory){
         RpcServer.implFactory = implFactory;

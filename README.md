@@ -9,6 +9,8 @@
 - rpc-common  存储客户端和服务端通用的类和工具
 - rpc-client  客户端的主要代码实现, 引入其jar包便可进行rpc调用
 - rpc-server  服务端的主要代码实现, 引入其jar包便可提供rpc服务
+- rpc-server-spring-boot-starter 和springboot相结合的服务端, 可在spring-boot环境下快速使用
+- rpc-client-spring-boot-starter 和springboot相结合的客户端, 可在spring-boot环境下快速使用
 - test-client 提供对客户端的测试
 - test-server 提供对服务端的测试
 
