@@ -19,6 +19,10 @@ public class TestClient {
 
     public static void main(String[] args) throws InterruptedException {
         TestRpc proxy = ProxyFactory.createProxy(TestRpc.class);
+        System.out.println(proxy.get());
+        for (int i = 0; i < 10; i++) {
+            proxy.get();
+        }
 //        ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 10,
 //                1000, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 //        for (int i = 0; i < 200; i++) {

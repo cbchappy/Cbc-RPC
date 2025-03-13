@@ -1,6 +1,7 @@
 package com.example.test;
 
 import com.example.rpcserver.server.RpcServer;
+import com.example.test.service.TestRpc;
 import com.example.test.service.impl.TestRpcImpl;
 
 /**
@@ -11,6 +12,8 @@ import com.example.test.service.impl.TestRpcImpl;
 public class TestServer {
 
     public static void main(String[] args) throws Exception {
+        RpcServer.openServiceImpl(TestRpcImpl.class, TestServer.class);
+        RpcServer.startServer();
     }
 
 

@@ -47,6 +47,7 @@ import static com.example.rpcclient.server.InstanceService.getAvailableServer;
 
 //提供拓展点
 //监控:单个实例->地址 名字 速度 出错次数 访问次数 是否可用 刷新速度
+
 /**
  * @Author Cbc
  * @DateTime 2024/12/9 14:15
@@ -63,9 +64,9 @@ public class ServerCenter {
 
 
     static {
-       if (FAULT_TOLERANT_CODE == FaultTolerantCode.RETRY) {
+        if (FAULT_TOLERANT_CODE == FaultTolerantCode.RETRY) {
             FAULT_TOLERANT = new RetryFaultTolerant();
-        }else {
+        } else {
             FAULT_TOLERANT = new RetryFaultTolerant();
             throw new RpcException(RpcExceptionMsg.FAULT_TOLERANT_NOT_FOUND);
         }
@@ -78,7 +79,7 @@ public class ServerCenter {
     }//在instances更新时弃用掉不健康的连接
 
     static {
-        if(MONITOR_LOG){
+        if (MONITOR_LOG) {
             log.debug("开启服务实例信息详细监控");
             MonitorHandler monitorHandler = new MonitorHandler();
             AfterResponseDoHandler.addAfterResponseHandler(monitorHandler);
@@ -91,7 +92,7 @@ public class ServerCenter {
     public static Object remoteInvoke(Request request) throws Throwable {
         Instance instance = null;
         try {
-           instance  = getAvailableServer();
+            instance = getAvailableServer();
 
             Channel channel = getChannel(instance);
 
@@ -114,12 +115,12 @@ public class ServerCenter {
 
             channel.closeFuture().removeListener(listener);
 
-            if(!promise.isDone()){
+            if (!promise.isDone()) {
                 log.debug("请求连接超时, msgId:{}", request.getMsgId());
                 promise.setFailure(new RuntimeException(RpcExceptionMsg.REQUEST_OVERTIME));
             }
 
-            if(promise.isSuccess()){
+            if (promise.isSuccess()) {
                 log.debug("MsgId{}:成功获取结果!!", request.getMsgId());
                 return promise.get();
             } else {
@@ -131,15 +132,16 @@ public class ServerCenter {
             return FAULT_TOLERANT.faultHandler(instance, e, request);
         }
     }
+
     //channel复用
     private static Channel getChannel(Instance instance) throws InterruptedException {
 
-        if (channelMap.containsKey(instance)){
+        if (channelMap.containsKey(instance)) {
             return channelMap.get(instance);
         }
 
-        synchronized (instance){
-            if (channelMap.containsKey(instance)){
+        synchronized (instance) {
+            if (channelMap.containsKey(instance)) {
                 log.debug("进行channel复用");
                 return channelMap.get(instance);
             }
@@ -156,19 +158,13 @@ public class ServerCenter {
                             ch.pipeline().addLast(new ResponseHandler());//响应处理器
                             ch.pipeline().addLast(new AfterResponseDoHandler(instance));//响应后处理器
                             ch.pipeline().addLast(new BeforeEncodeDoHandler(instance));//编码前处理器
-
-
                             //到达指定空闲时间触发事件
-                            if(LONG_CONNECTION){
-                                ch.pipeline().addLast(new IdleStateHandler( CONNECT_IDLE_TIME, 0, 0, TimeUnit.SECONDS));
-                                ch.pipeline().addLast(new IdleStateHandler(0, PING_INTERVAL,0, TimeUnit.SECONDS));
-                                ch.pipeline().addLast(new ReadIdleStateEventHandler(instance));//处理写空闲
-                                ch.pipeline().addLast(new WriteIdleEventHandler());//处理读空闲
-                            }
-
+                            ch.pipeline().addLast(new IdleStateHandler(CONNECT_IDLE_TIME, 0, 0, TimeUnit.SECONDS));
+                            ch.pipeline().addLast(new IdleStateHandler(0, PING_INTERVAL, 0, TimeUnit.SECONDS));
+                            ch.pipeline().addLast(new ReadIdleStateEventHandler(instance));//处理写空闲
+                            ch.pipeline().addLast(new WriteIdleEventHandler());//处理读空闲
                         }
                     })
-                    .option(ChannelOption.SO_KEEPALIVE, LONG_CONNECTION)
                     .connect(instance.getIp(), instance.getPort())
                     .sync()
                     .channel();
@@ -187,19 +183,19 @@ public class ServerCenter {
     }
 
     //停止channel
-    public static void stopChannel(Instance instance){
+    public static void stopChannel(Instance instance) {
         Channel channel = channelMap.get(instance);
-        if(channel == null){
+        if (channel == null) {
             return;
         }
         channel.close();
     }
 
 
-    public static class MyCloseFutureListener implements ChannelFutureListener{
+    public static class MyCloseFutureListener implements ChannelFutureListener {
         private DefaultPromise<Object> promise;
 
-        private MyCloseFutureListener(DefaultPromise<Object> promise){
+        private MyCloseFutureListener(DefaultPromise<Object> promise) {
             this.promise = promise;
         }
 
@@ -208,21 +204,21 @@ public class ServerCenter {
             log.debug("operationComplete");
             Attribute<Object> attr = future.channel().attr(AttributeKey.valueOf("close"));
             Object o = attr.get();
-            if(o == null || promise.isDone()){
+            if (o == null || promise.isDone()) {
                 log.debug("return");
                 return;
             }
             CloseMsg closeMsg = (CloseMsg) o;
             Integer status = closeMsg.getStatus();
-            if(status.intValue() == CloseMsg.CloseStatus.normal.code){
+            if (status.intValue() == CloseMsg.CloseStatus.normal.code) {
                 promise.setFailure(new RuntimeException(RpcExceptionMsg.IDLE_TIME_REFUSE));
                 return;
             }
-            if(status.intValue() == CloseMsg.CloseStatus.protocolError.code){
+            if (status.intValue() == CloseMsg.CloseStatus.protocolError.code) {
                 promise.setFailure(new RuntimeException(RpcExceptionMsg.VERIFY_ERROR));
                 return;
             }
-            if(status.intValue() == CloseMsg.CloseStatus.refuse.code){
+            if (status.intValue() == CloseMsg.CloseStatus.refuse.code) {
                 promise.setFailure(new RuntimeException(RpcExceptionMsg.SERVER_REFUSE));
             }
 

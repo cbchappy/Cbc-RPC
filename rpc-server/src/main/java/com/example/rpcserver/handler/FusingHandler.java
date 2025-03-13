@@ -41,5 +41,15 @@ public class FusingHandler extends ChannelInboundHandlerAdapter {
         super.channelRegistered(ctx);
     }
 
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        log.debug("---------active-------");
+        super.channelActive(ctx);
+    }
 
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        log.debug("---------inActive-------");
+        super.channelInactive(ctx);
+    }
 }
