@@ -10,6 +10,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.SocketAddress;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @Author Cbc
@@ -18,14 +19,19 @@ import java.net.SocketAddress;
  */
 @Slf4j
 public class ReadIdleStateEventHandler extends ChannelDuplexHandler {
+    private int num = 0;
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
         if(idleStateEvent.state() == IdleState.READER_IDLE){
-            log.debug("未接收到客户端消息达到{}秒, 开始断开客户端连接", ServerConfig.READ_IDLE_TIME);
-            ctx.channel().close();
-            return;
+                num++;
+                if(num == 3){
+                    ctx.channel().close();
+                }else {
+                    log.debug("未接收到客户端消息达到{}秒, 给客户端发送心跳包", ServerConfig.READ_IDLE_TIME);
+                    ctx.channel().writeAndFlush(new PingMsg());
+                }
         }
         super.userEventTriggered(ctx, evt);
     }

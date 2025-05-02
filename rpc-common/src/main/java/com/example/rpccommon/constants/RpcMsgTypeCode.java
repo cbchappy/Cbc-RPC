@@ -14,4 +14,6 @@ public class RpcMsgTypeCode {
     public static final Integer PINGMSG = 2;
 
     public static final Integer CLOSE = 3;
+
+    public static final Integer PING_ACK = 4;
 }

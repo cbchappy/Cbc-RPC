@@ -26,7 +26,7 @@ public class WeightLoadBalance implements LoadBalance{
         //二分法提高效率
         int l = 0;
         int r = len - 1;
-        while (l < r){
+        while (l <= r){
             int mid = (l + r) / 2;
             if(arr[mid] < random){
                 l = mid + 1;

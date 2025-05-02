@@ -1,7 +1,7 @@
 package com.example.test;
 
 
-import com.example.server.spring.annotation.StartRpcServer;
+import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.graalvm.polyglot.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,7 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Description
  */
 @SpringBootApplication
-@StartRpcServer(values = {"com.example.test.service"})
+@EnableDubbo
+//@StartRpcServer(values = {"com.example.test.service"})
 public class SpringTestServer {
     public static void main(String[] args) {
         SpringApplication.run(SpringTestServer.class, args);

@@ -9,8 +9,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class Main {
+    int i = 0;
 
     public static void main(String[] args) {
-        log.info("\n\n\n你好");
+        Main main = new Main();
+        main.i++;
+        System.out.println(main.i);
     }
 }

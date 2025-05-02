@@ -18,7 +18,14 @@ public class RoundRobinLoadBalance implements LoadBalance{
     @Override
     public Instance loadBalancingAndGet(List<Instance> instances) {
         int i = index.getAndIncrement() % instances.size();
-
         return instances.get(i);
+    }
+
+    public static RoundRobinLoadBalance getInstance(){
+        return Singleton.instance;
+    }
+
+    private static class Singleton{
+        public static RoundRobinLoadBalance instance = new RoundRobinLoadBalance();
     }
 }

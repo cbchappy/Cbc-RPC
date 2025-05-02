@@ -10,10 +10,7 @@ import com.example.rpccommon.util.CommonUtil;
 import com.example.rpcserver.config.ServerConfig;
 import com.example.rpcserver.factory.DefaultServiceImplFactory;
 import com.example.rpcserver.factory.ServiceImplFactory;
-import com.example.rpcserver.handler.FusingHandler;
-import com.example.rpcserver.handler.ReadIdleStateEventHandler;
-import com.example.rpcserver.handler.RegistryHandler;
-import com.example.rpcserver.handler.RequestHandler;
+import com.example.rpcserver.handler.*;
 import com.example.rpcserver.protocol.RpcServerMsgCodec;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -29,7 +26,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.rmi.registry.RegistryHandler;
 import java.util.Properties;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,10 +44,6 @@ import static com.example.rpcserver.config.ServerConfig.*;
  */
 @Slf4j
 public class RpcServer {
-    private final static AtomicInteger count = new AtomicInteger(0);//计数服务被调用的次数
-
-    private final static AtomicBoolean isFusing = new AtomicBoolean(false);//判断是否是熔断状态
-    private final static AtomicInteger exceptionCount = new AtomicInteger(0);//记录错误次数
 
     private static Channel channel = null;//总服务通道
 
@@ -60,9 +57,9 @@ public class RpcServer {
 
     private static ServiceImplFactory implFactory = new DefaultServiceImplFactory();//远程调用服务类实现工厂
 
-    static {
-        CommonUtil.printLogo();
-    }
+    private static ExecutorService executorService = Executors.newFixedThreadPool(100);//业务线程池
+
+
 
     public static void setServiceImplFactory(ServiceImplFactory implFactory){
         RpcServer.implFactory = implFactory;
@@ -75,11 +72,6 @@ public class RpcServer {
         boss = new NioEventLoopGroup(BOSS_THREAD_NUM);
         workers = new NioEventLoopGroup(WORK_THREAD_NUM);
 
-        //初始化数据
-        count.set(0);
-        isFusing.set(false);
-        exceptionCount.set(0);
-
         ServerBootstrap bootstrap = new ServerBootstrap();
 
         channel = bootstrap.group(boss, workers)
@@ -90,14 +82,15 @@ public class RpcServer {
                         //head
                         ch.pipeline().addLast(new ProtocolFrameDecoder());//ltc解码器
                         ch.pipeline().addLast(new RpcServerMsgCodec());//ByteBuf编解码
-                        ch.pipeline().addLast(new FusingHandler());//熔断处理器
-                        ch.pipeline().addLast(new RegistryHandler());//注册处理器
                         ch.pipeline().addLast(new IdleStateHandler(READ_IDLE_TIME, 0, 0, TimeUnit.SECONDS));
                         ch.pipeline().addLast(new ReadIdleStateEventHandler());//读空闲处理器
                         ch.pipeline().addLast(new RequestHandler());//请求处理器
+                        ch.pipeline().addLast(new PingHandler());//ping处理器
                         //tail
                     }
                 })
+                .option(ChannelOption.TCP_NODELAY, true)
+                .childOption(ChannelOption.TCP_NODELAY, true)
                 .bind(REGISTRY_PORT)
                 .sync()
                 .channel();
@@ -122,21 +115,6 @@ public class RpcServer {
     }
 
 
-    //获取熔断状态
-    public static boolean isFusing() {
-        return isFusing.get();
-    }
-
-    //错误次数加一
-    public static int exceptionCountAdd() {
-        return exceptionCount.addAndGet(1);
-    }
-
-    //总次数加一
-    public static void countAdd() {
-        count.addAndGet(1);
-    }
-
     //选择开放的接口
     public static void openServiceImpl(Class<?> implClass, Class<?> interfaceClass) throws IOException {
         implFactory.openServiceImpl(implClass, interfaceClass);
@@ -145,37 +123,6 @@ public class RpcServer {
     //获取实现
     public static Object getServiceImpl(Class<?> interfaceClass){
         return implFactory.getServiceImpl(interfaceClass);
-    }
-
-    //更新熔断状态 注意线程安全 双重检查
-    public static void updateFusing() throws NacosException {
-        int c = count.get();
-        if (c >= FUSING_START_NUM && (double) exceptionCount.get() / c >= FUSING_DIVISOR) {
-            if(isFusing.get()){
-                return;
-            }
-            synchronized (count){
-                if(isFusing.get()){
-                    return;
-                }
-                log.debug("-----服务开启熔断-----");
-                isFusing.set(true);
-
-                NioEventLoopGroup executors = new NioEventLoopGroup(1);
-                stopServer();
-
-                //定时重启服务
-                executors.schedule(() -> {
-                    try {
-                        startServer();
-                        executors.shutdownGracefully();
-                    } catch (InterruptedException | NacosException e) {
-                        throw new RuntimeException(e);
-                    }
-                }, FUSING_RESTART_TIME, TimeUnit.SECONDS);
-
-            }
-        }
     }
 
     //注册服务到nacos
@@ -202,5 +149,9 @@ public class RpcServer {
         log.debug("从nacos移除服务, serverName:{}, groupName:{}, ip:{}, port:{}, cluster:{}",
                 REGISTRY_SERVER_NAME, GROUP_NAME, REGISTRY_IP, REGISTRY_PORT, CLUSTER_NAME);
         namingService.deregisterInstance(REGISTRY_SERVER_NAME, instance);
+    }
+
+    public static void asyncExecute(Runnable runnable){
+        executorService.execute(runnable);
     }
 }

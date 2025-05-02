@@ -15,12 +15,12 @@ import java.util.Map;
 /**
  * @Author Cbc
  * @DateTime 2024/12/12 14:21
- * @Description 在bean未注册前启动自定义扫描类进行扫描和处理
+ * @Description 启动自定义扫描类进行扫描和处理
  */
 @Slf4j
 public class RpcClientRegistrar implements ImportBeanDefinitionRegistrar {
 
-    //对符合条件的一个接口或一个类调用一次？？？
+    //AnnotationMetadata metadata是导入此类的类的元数据信息
     @Override
     public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry) {
 

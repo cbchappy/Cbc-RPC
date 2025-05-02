@@ -43,6 +43,10 @@ public class JsonSerializer extends RpcSerializer {
             return (T) deSerializedRequest(jo);
         } else if (clazz.equals(CloseMsg.class)) {
             return jo.toJavaObject(clazz);
+        } else if (clazz.equals(PingMsg.class)) {
+            return jo.toJavaObject(clazz);
+        } else if (clazz.equals(PingAckMsg.class)) {
+            return jo.toJavaObject(clazz);
         }
 
         return jo.toJavaObject(clazz);

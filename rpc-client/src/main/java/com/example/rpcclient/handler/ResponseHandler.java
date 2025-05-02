@@ -1,5 +1,6 @@
 package com.example.rpcclient.handler;
 
+import com.example.rpcclient.server.InvokeCenter;
 import com.example.rpccommon.constants.ResponseStatus;
 import com.example.rpccommon.exception.RpcRequestException;
 import com.example.rpccommon.exception.RpcResponseException;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @Author Cbc
@@ -23,34 +25,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class ResponseHandler extends SimpleChannelInboundHandler<Response> {
 
-    private static final Map<Integer, DefaultPromise<Object>> promiseMap = new ConcurrentHashMap<>();
-
-    public static Map<Integer, DefaultPromise<Object>> getMap(){
-        return promiseMap;
-    }
-
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Response msg) throws Exception {
         log.debug("处理response");
-        Integer msgId = msg.getMsgId();
-
-        DefaultPromise<Object> promise = promiseMap.remove(msgId);
-
-        Integer status = msg.getStatus();
-
-        if(Objects.equals(status, ResponseStatus.SUCCESS.code)){
-            promise.setSuccess(msg.getRes());
-            ctx.fireChannelRead(msg);
-            return;
-        }
-
-        if(status < 500){
-           promise.setFailure(new RpcRequestException(ResponseStatus.getEnumByCode(status)));
-        }else {
-            promise.setFailure(new RpcResponseException(ResponseStatus.getEnumByCode(status)));
-        }
-        ctx.fireChannelRead(msg);//将消息传播给下一个
-
-
+        ExecutorService executorService = InvokeCenter.EXECUTOR_SERVICE;
+        executorService.execute(() -> InvokeCenter.POSTCHAIN_MAP.get(ctx.channel()).doHandle(msg, 0));
+        ctx.fireChannelRead(msg);
     }
+
+
 }

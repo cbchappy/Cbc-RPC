@@ -23,6 +23,7 @@ public abstract class RpcMsg implements Serializable {
         CLASS_MAP.put(RpcMsgTypeCode.REQUEST, Request.class);
         CLASS_MAP.put(RpcMsgTypeCode.PINGMSG, PingMsg.class);
         CLASS_MAP.put(RpcMsgTypeCode.RESPONSE, Response.class);
+        CLASS_MAP.put(RpcMsgTypeCode.PING_ACK, PingAckMsg.class);
     }
 
 

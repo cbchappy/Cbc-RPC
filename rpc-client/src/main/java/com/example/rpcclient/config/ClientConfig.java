@@ -24,11 +24,11 @@ public class ClientConfig {
 
     public static Integer LOAD_BALANCE_CODE = 2; //负载均衡策略码 0 随机 1 轮询 2 权重
 
-    public static Integer SERIALIZER_TYPE_CODE = 1;//序列化策略码 0 java原始流 1 json 2 hessian
+    public static Integer SERIALIZER_TYPE_CODE = 2;//序列化策略码 0 java原始流 1 json 2 hessian
 
-    public static Integer FAULT_TOLERANT_CODE = 0;//容错处理 0 进行重试
+    public static Integer FAULT_TOLERANT_CODE = 0;//
 
-    public static Integer PING_INTERVAL = 1;//心跳包发送间隔 单位为秒
+    public static Integer PING_INTERVAL = 30;//心跳包发送间隔 单位为秒
 
     public static Integer CONNECT_IDLE_TIME = 5;//连接空闲多久后中断 单位为秒
 
@@ -39,7 +39,6 @@ public class ClientConfig {
     public static Integer OVERTIME = 10;//单个请求超时时间 单位为秒
 
     public static Boolean MONITOR_LOG = true;//服务实例信息详细监控日志
-
 
 
 }

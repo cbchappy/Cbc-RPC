@@ -26,11 +26,11 @@ public class ServerConfig {
 
     public static String PASSWORD = "nacos";//nacos服务端密码
 
-    public static Integer READ_IDLE_TIME = 5;//最大读空闲时间, 时间单位为秒
+    public static Integer READ_IDLE_TIME = 60;//最大读空闲时间, 时间单位为秒
 
     public static Integer BOSS_THREAD_NUM = 1;//netty的boss线程数
 
-    public static Integer WORK_THREAD_NUM = 3;//netty的workers线程数
+    public static Integer WORK_THREAD_NUM = Runtime.getRuntime().availableProcessors();//netty的workers线程数
 
     public static Integer FUSING_START_NUM = 30;//熔断开始计算的最小请求服务器次数
 
