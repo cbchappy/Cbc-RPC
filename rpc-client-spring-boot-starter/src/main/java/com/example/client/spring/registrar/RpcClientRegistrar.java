@@ -1,6 +1,7 @@
 package com.example.client.spring.registrar;
 
 import com.example.client.spring.annotation.RpcClientScan;
+import com.example.client.spring.scan.MockScanner;
 import com.example.client.spring.scan.RpcClientScanner;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -33,7 +34,9 @@ public class RpcClientRegistrar implements ImportBeanDefinitionRegistrar {
             String s = StringUtils.collectionToCommaDelimitedString(List.of(values));
             log.debug("doScan basePackages:{}", s);
             RpcClientScanner scanner = new RpcClientScanner(registry);
+            MockScanner mockScanner = new MockScanner(registry);
             scanner.doScan(s);
+            mockScanner.doScan(s);
         }
 
     }

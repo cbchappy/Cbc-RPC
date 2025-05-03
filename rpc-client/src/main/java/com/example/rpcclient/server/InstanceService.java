@@ -9,10 +9,7 @@ import com.alibaba.nacos.api.naming.listener.Event;
 import com.alibaba.nacos.api.naming.listener.EventListener;
 import com.alibaba.nacos.api.naming.listener.NamingEvent;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.example.rpcclient.blance.LoadBalance;
-import com.example.rpcclient.blance.RandomLoadBalance;
-import com.example.rpcclient.blance.RoundRobinLoadBalance;
-import com.example.rpcclient.blance.WeightLoadBalance;
+import com.example.rpcclient.blance.*;
 import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.tolerant.CircuitBreaker;
 import com.example.rpccommon.constants.RpcExceptionMsg;
@@ -37,7 +34,7 @@ public class InstanceService {
     //服务实例  熔断器
     private static volatile NamingService namingService;//nacos总服务端
     private static volatile List<Instance> instances;//获取到的所有服务实例
-    private final static LoadBalance LOAD_BALANCE;//根据配置文件获取负载均衡实例
+    public final static LoadBalance LOAD_BALANCE;//根据配置文件获取负载均衡实例
     private final static ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();//instances的读写锁
     private static final List<UpdateInstancesConsumer> consumerList = new CopyOnWriteArrayList<>();
     private static final ConcurrentHashMap<Instance, CircuitBreaker> CB_MAP = new ConcurrentHashMap<>();
@@ -52,15 +49,18 @@ public class InstanceService {
         } else if (ROUND_ROBIN_LOAD_BALANCE.equals(LOAD_BALANCE_CODE)) {
             log.debug("开启轮询策略");
             LOAD_BALANCE = new RoundRobinLoadBalance();
+        }else if(Least_Active_Balance.equals(LOAD_BALANCE_CODE)){
+            log.debug("开启最少调用策略");
+            LOAD_BALANCE = new LeastActiveLoadBalance();
         }else {
             log.debug("开启轮询策略");
             LOAD_BALANCE = new RoundRobinLoadBalance();
-            throw new RpcException(RpcExceptionMsg.LOAD_BALANCE_NOT_FOUND);
         }
     }//初始化负载均衡类
 
+
     //服务发现 只启动一次
-    private static void findServer() throws NacosException {
+    public static void findServer() throws NacosException {
 
         if(namingService == null){
 
@@ -116,8 +116,6 @@ public class InstanceService {
 
         }
 
-
-
     }
 
     //监听服务实例变化
@@ -159,7 +157,6 @@ public class InstanceService {
 
     //获取负载均衡后的可用服务
     public static Instance getAvailableServer() throws NacosException {
-        findServer();
         rwl.readLock().lock();
         try {
             return LOAD_BALANCE.loadBalancingAndGet(instances);
@@ -172,12 +169,9 @@ public class InstanceService {
         consumerList.add(consumer);
     }
 
-    public static List<Instance> getInstances(){
-        return instances;
-    }
-
     //获得不同的实例
     public static Instance getOtherInstance(Instance instance){
+
         rwl.readLock().lock();
         try {
             int index = (int) (System.currentTimeMillis() % instances.size());
@@ -192,6 +186,14 @@ public class InstanceService {
 
     public static CircuitBreaker getCircuitBreaker(Instance instance){
         return CB_MAP.get(instance);
+    }
+
+    public static List<Instance> getInstances(){
+        return instances;
+    }
+
+    public static LoadBalance getLoadBalance(){
+        return LOAD_BALANCE;
     }
 
     @FunctionalInterface

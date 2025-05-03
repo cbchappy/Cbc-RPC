@@ -13,4 +13,6 @@ public class LoadBalanceTypeCode {
 
     public static final Integer WEIGHT_LOAD_BALANCE = 2;//权重
 
+    public static final Integer Least_Active_Balance = 3;//最少调用
+
 }

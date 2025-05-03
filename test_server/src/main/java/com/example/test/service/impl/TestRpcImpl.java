@@ -2,9 +2,10 @@ package com.example.test.service.impl;
 
 
 
+import com.example.server.spring.annotation.OpenRpcService;
 import com.example.test.service.TestRpc;
 
-import org.apache.dubbo.config.annotation.DubboService;
+
 import org.springframework.stereotype.Service;
 
 import java.util.Random;
@@ -18,8 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 //@Service
 
 
-//@OpenRpcService
-@DubboService
+@OpenRpcService
+//@DubboService
 @Service
 public class TestRpcImpl implements TestRpc {
     private AtomicInteger count = new AtomicInteger(0);
@@ -36,7 +37,14 @@ public class TestRpcImpl implements TestRpc {
 //            ex.addAndGet(1);
 //            throw new RuntimeException();
 //        }
-//        log.debug("\ncount: {}, ex: {}\n", count.get(), ex.get());
-        return "test_res";
+//        log.debug("\ncount: {}, ex: {}\n", count.get(), ex.get());Tthrow new RuntimeException()
+//        return "test_res";
+
+        try {
+            throw new RuntimeException();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

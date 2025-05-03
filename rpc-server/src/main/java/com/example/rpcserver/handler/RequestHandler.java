@@ -46,9 +46,9 @@ public class RequestHandler extends SimpleChannelInboundHandler<Request> {
 
         @Override
         public void run() {
-//
-//            limiter.acquire();
 
+            //获取令牌
+            limiter.acquire();
 
             Class<?> intefaceClass = null;
             Response response = Response.builder()

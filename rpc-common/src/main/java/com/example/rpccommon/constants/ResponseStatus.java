@@ -15,6 +15,7 @@ public enum ResponseStatus {
     METHOD_NOT_FOUND(403, "请求调用的方法不存在"),
     IMPL_NOT_FOUND(404, "未找到接口实现类"),
     SERVER_EXCEPTION(500, "服务端出现未知异常"),
+    TIME_OUT(501, "超时"),
     SERVER_IMPL_NOT_FOUND(501, "服务端未存在接口的实现类"),
     SERIALIZATION(502, "服务端序列化器异常"),
     ;

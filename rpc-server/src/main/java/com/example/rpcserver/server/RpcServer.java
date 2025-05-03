@@ -57,7 +57,7 @@ public class RpcServer {
 
     private static ServiceImplFactory implFactory = new DefaultServiceImplFactory();//远程调用服务类实现工厂
 
-    private static ExecutorService executorService = Executors.newFixedThreadPool(100);//业务线程池
+    private static ExecutorService executorService = Executors.newFixedThreadPool(200);//业务线程池
 
 
 

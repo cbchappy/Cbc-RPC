@@ -1,5 +1,6 @@
 package com.example.rpcclient.handler.postHandler;
 
+import com.example.rpcclient.server.InstanceService;
 import com.example.rpcclient.server.InvokeCenter;
 import com.example.rpccommon.constants.ResponseStatus;
 import com.example.rpccommon.exception.RpcRequestException;
@@ -21,8 +22,14 @@ public class DefaultPostHandler implements PostHandler{
     }
     @Override
     public void handler(Response msg, PostHandlerChain chain, int index) {
-        Integer msgId = msg.getMsgId();
 
+
+        if(!InvokeCenter.promiseMap.containsKey(msg.getMsgId())){
+           msg.setStatus(ResponseStatus.TIME_OUT.code);
+            chain.doHandle(msg, index);
+            return;
+        }
+        Integer msgId = msg.getMsgId();
         DefaultPromise<Object> promise = InvokeCenter.promiseMap.remove(msgId);
 
         Integer status = msg.getStatus();

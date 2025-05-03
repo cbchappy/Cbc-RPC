@@ -15,7 +15,7 @@ import java.util.ServiceLoader;
  * @Description
  */
 public class PreHandlerChain {
-    private Instance instance;
+    private final Instance instance;
     private final List<PreHandler> list = new ArrayList<>();
 
     public PreHandlerChain(Instance instance){
@@ -35,7 +35,6 @@ public class PreHandlerChain {
 
     public static PreHandlerChain createPreHandlerChain(Instance instance){
         PreHandlerChain chain = new PreHandlerChain(instance);
-        chain.addPreHandler(new CircuitBreakerPreHandler());
         for (PreHandler next : ServiceLoader.load(PreHandler.class)) {
             chain.addPreHandler(next);
         }

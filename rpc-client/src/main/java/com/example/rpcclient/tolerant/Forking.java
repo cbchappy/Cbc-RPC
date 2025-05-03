@@ -23,8 +23,14 @@ public class Forking implements FaultTolerant{
         final Throwable[] tbs_2 = {null};
        CompletableFuture.supplyAsync(new ForkingSupplier<>(count, instance, request, res, tbs_1));
 
+       Request rq2 = Request.builder()
+               .args(request.getArgs())
+               .methodName(request.getMethodName())
+               .build();
+       rq2.setArgsClassNames(request.getArgsClassNames());
+
        Instance nst = InstanceService.getOtherInstance(instance);
-       CompletableFuture.supplyAsync(new ForkingSupplier<>(count, nst, request, res, tbs_2));
+       CompletableFuture.supplyAsync(new ForkingSupplier<>(count, nst, rq2, res, tbs_2));
 
         try {
             count.await();

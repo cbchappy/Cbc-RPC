@@ -27,7 +27,8 @@ public class RpcClientMsgCodec extends ByteToMessageCodec<RpcMsg> {
     @Override
     protected void encode(ChannelHandlerContext ctx, RpcMsg msg, ByteBuf out) throws Exception {
         //魔数 4
-        out.writeInt(ProtocolConfig.getMagic());//
+        out.writeInt(ProtocolConfig.getMagic());
+        //版本
         out.writeByte(ProtocolConfig.getVersion());
         //请求类型 1
         int msgTypeCode = msg.getTypeCode();

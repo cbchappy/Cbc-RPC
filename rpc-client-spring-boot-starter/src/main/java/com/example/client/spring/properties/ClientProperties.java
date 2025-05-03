@@ -1,6 +1,7 @@
 package com.example.client.spring.properties;
 
 import com.alibaba.fastjson.JSON;
+import com.example.rpcclient.server.ClientBootstrap;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -86,5 +87,6 @@ public class ClientProperties implements InitializingBean {
             OVERTIME = connect.overTime == null ? OVERTIME : connect.overTime;
             MONITOR_LOG = connect.monitorLog == null ? MONITOR_LOG : connect.monitorLog;
         }
+        ClientBootstrap.initializeClient();
     }
 }

@@ -1,6 +1,7 @@
 package com.example.test.service;
 
 
+import com.example.client.spring.annotation.RpcInvoke;
 import org.springframework.stereotype.Service;
 
 /**
@@ -8,8 +9,8 @@ import org.springframework.stereotype.Service;
  * @DateTime 2024/12/10 17:52
  * @Description
  */
-//@RpcInvoke
-@Service
+@RpcInvoke
+//@Service
 public interface TestRpc {
     String get();
 

@@ -9,5 +9,6 @@ import io.netty.util.concurrent.Promise;
  * @Description
  */
 public interface PostHandler {
-    void handler(Response response, PostHandlerChain chain, int index);
+  void handler(Response response, PostHandlerChain chain, int index);
+
 }
