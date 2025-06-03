@@ -1,4 +1,4 @@
-# application.yml
+
 #spring:
 #  application:
 #    name: dubbo-provider-demo
@@ -19,8 +19,18 @@
 #    name: dubbo     # 使用Dubbo协议
 #    port: 20880     # 服务暴露端口
 #  scan:
-#    base-packages: com.example.test.service.impl        --->dubbo
+#    base-packages: com.example.test.service.impl
 
 server:
   port: 8082
+  tomcat:
+    max-connections: 1000000
+    threads:
+      max: 200
+cbc:
+  rpc:
+    nacos:
+      registry:
+        port: 8086
+        server-name: s2
 

@@ -10,7 +10,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * @Description 熔断器
  */
 public class CircuitBreaker {
-    private final int minNum = 25;
+    //todo 修改熔断器一些逻辑
+    private final int minNum = 1000000;
     private final AtomicInteger totalNum = new AtomicInteger(0);
     public AtomicInteger exceptionNum = new AtomicInteger(0);
     public AtomicInteger state; //0 关闭   1 半开启  2 开启
@@ -22,8 +23,8 @@ public class CircuitBreaker {
     }
 
     public boolean isRequest(){
-        this.totalNum.incrementAndGet();
-        if(totalNum.get() < minNum){
+        int v = this.totalNum.incrementAndGet();
+        if(v < minNum){
             return true;
         }
         int s = state.get();
@@ -62,5 +63,7 @@ public class CircuitBreaker {
             state.set(0);
         }
     }
+
+
 
 }

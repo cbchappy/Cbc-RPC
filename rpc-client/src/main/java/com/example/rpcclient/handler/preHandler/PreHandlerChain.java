@@ -1,8 +1,6 @@
 package com.example.rpcclient.handler.preHandler;
 
 
-import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.example.rpccommon.message.Request;
 import io.netty.channel.Channel;
 
 import java.util.ArrayList;
@@ -15,32 +13,29 @@ import java.util.ServiceLoader;
  * @Description
  */
 public class PreHandlerChain {
-    private final Instance instance;
+
     private final List<PreHandler> list = new ArrayList<>();
 
-    public PreHandlerChain(Instance instance){
-        this.instance = instance;
-    }
 
     public PreHandlerChain addPreHandler(PreHandler hd){
         list.add(hd);
         return this;
     }
 
-    public void doHandle(Request rq, int index){
+    public Object doHandle(Channel channel, Object rq, int index){
         if(index < list.size()){
-            list.get(index).handler(rq, this, index + 1);
+            return list.get(index).handler(channel, rq, this, index + 1);
         }
+        return rq;
     }
 
-    public static PreHandlerChain createPreHandlerChain(Instance instance){
-        PreHandlerChain chain = new PreHandlerChain(instance);
+    public static PreHandlerChain createPreHandlerChain(){
+        PreHandlerChain chain = new PreHandlerChain();
+        chain.addPreHandler(new EncodePreHandler());
         for (PreHandler next : ServiceLoader.load(PreHandler.class)) {
             chain.addPreHandler(next);
         }
         return chain;
     }
-    public Instance getInstance(){
-        return instance;
-    }
+
 }

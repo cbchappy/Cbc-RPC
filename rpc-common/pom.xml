@@ -19,6 +19,13 @@
     </properties>
 
     <dependencies>
+
+        <!--okhttp-->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version> <!-- 截至2025年最新版 -->
+        </dependency>
     </dependencies>
 
 

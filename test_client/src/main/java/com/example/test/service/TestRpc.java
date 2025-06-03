@@ -6,15 +6,15 @@ import org.springframework.stereotype.Service;
 
 /**
  * @Author Cbc
- * @DateTime 2024/12/10 17:52
+ * @DateTime 2025/5/3 17:56
  * @Description
  */
 @RpcInvoke
-//@Service
 public interface TestRpc {
     String get();
 
     String error(String s);
+
 }
 
 

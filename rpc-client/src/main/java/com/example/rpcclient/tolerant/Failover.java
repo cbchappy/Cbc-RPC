@@ -1,13 +1,13 @@
 package com.example.rpcclient.tolerant;
 
-import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.example.rpcclient.blance.RoundRobinLoadBalance;
 import com.example.rpcclient.config.ClientConfig;
-import com.example.rpcclient.server.InstanceService;
-import com.example.rpcclient.server.InvokeCenter;
-
+import com.example.rpcclient.server.InstanceWrapper;
+import com.example.rpcclient.server.InvokeServer;
+import com.example.rpcclient.server.LoadBalanceServer;
+import com.example.rpccommon.constants.ResponseStatus;
 import com.example.rpccommon.exception.RpcException;
 import com.example.rpccommon.message.Request;
+import com.example.rpccommon.message.Response;
 import lombok.extern.slf4j.Slf4j;
 
 
@@ -19,17 +19,30 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class Failover implements FaultTolerant{
     @Override
-    public Object faultHandler(Instance instance, Throwable cause, Request request) {
+    public Object faultHandler(InstanceWrapper wrapper, Throwable cause, Request request) {
             int num = 0;
+            Integer status = null;
+            Response response = null;
             while (true){
                 num++;
                 try {
-                    return InvokeCenter.doRemoteInvoke(request, instance);
-                } catch (Throwable e) {
-                    if(num == ClientConfig.RETRY_NUM){
-                        throw new RpcException(e);
+                   response  = InvokeServer.doFilterAndGet(request, wrapper);
+                    status = response.getStatus();
+                    if(!status.equals(ResponseStatus.SUCCESS.code)){
+                        throw new RpcException(ResponseStatus.getEnumByCode(status).msg);
                     }
-                    instance = InstanceService.getOtherInstance(instance);
+                    return response.getRes();
+                } catch (Throwable e) {
+                    wrapper = LoadBalanceServer.getOtherInstance(wrapper);
+                    if (num == ClientConfig.RETRY_NUM) {
+                        if((status == null || status.intValue() != ResponseStatus.MOCK.code)){
+                            throw new RpcException(e);
+                        }else {
+                            return response.getRes();
+                        }
+
+                    }
+
                 }
             }
     }

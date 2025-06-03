@@ -1,9 +1,7 @@
 package com.example.rpcclient.proxy;
 
-import com.example.rpcclient.server.InvokeCenter;
-
+import com.example.rpcclient.server.InvokeServer;
 import com.example.rpccommon.message.Request;
-import com.example.rpccommon.util.CommonUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
@@ -38,7 +36,7 @@ public class ProxyFactory{
                     .args(args)
                     .interfaceName(proxy.getClass().getInterfaces()[0].getName())
                     .build();
-            return InvokeCenter.remoteInvoke(request);
+            return InvokeServer.invoke(request);
         }
     }
 }

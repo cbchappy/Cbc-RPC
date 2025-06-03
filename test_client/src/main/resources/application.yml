@@ -1,4 +1,4 @@
-# application.yml
+
 #spring:
 #  application:
 #    name: dubbo-consumer-demo
@@ -16,3 +16,12 @@
 
 server:
   port: 8081
+  tomcat:
+    max-connections: 1000000
+    threads:
+      max: 40
+cbc:
+  rpc:
+    nacos:
+      discovery:
+        server-name: s2

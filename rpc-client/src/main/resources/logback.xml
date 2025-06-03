@@ -23,12 +23,8 @@
         </encoder>
     </appender>-->
 
-    <!-- 用来控制查看那个类的日志内容（对mybatis name 代表命名空间） -->
-    <logger name="com.example" level="DEBUG" additivity="false">
-        <appender-ref ref="STDOUT"/>
-    </logger>
-
-    <logger name="io.netty.handler.logging.LoggingHandler" level="DEBUG" additivity="false">
+    <!-- 用来控制查看那个类的日志内容（对mybatis name 代表命名空间） DEBUG-->
+    <logger name="com.example" level="INFO" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 

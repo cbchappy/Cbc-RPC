@@ -11,45 +11,63 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @Description 令牌桶限流
  */
 public class MyRateLimiter {
-    private final long perNa;//？纳秒/个
+    private final long perNa;//？微秒/个
     private long preTime;//上次更新时间
-    private int tokens;//剩余数量
+    private long tokens;//剩余数量
     private final int maxToken;
 
-    public MyRateLimiter(long perNa, int maxToken, int initialToken){
-        this.perNa = perNa;
+
+    public MyRateLimiter(long numPerSc, int maxToken, int initialToken){
+        this.perNa = (long) (Math.pow(10, 6) / numPerSc);
         this.maxToken = maxToken;
         this.tokens = initialToken;
-        this.preTime = System.nanoTime();
+        this.preTime = System.nanoTime() / 1000;
     }
 
-    public synchronized void acquire(){
-        //补充令牌
-        long wait = fillToken();
-        //获取令牌
-        if(tokens > 0){
-            tokens--;
-            return;
-        }
-        //等待
-        try {
-            TimeUnit.NANOSECONDS.sleep(wait);
-            fillToken();
-            tokens--;
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
+    public void acquire(){
+        acquire(1);
     }
 
+    public void acquire(int num){
+        if(num < 1){
+            num = 1;
+        }
+        long wait = fillAndGet(num);
+        if(wait > 0){
+            try {
+                TimeUnit.MICROSECONDS.sleep(wait);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
-    private long fillToken(){
-        long now = System.nanoTime();
+    private synchronized long fillAndGet(int num){
+        long now = System.nanoTime() / 1000;
         long sub = now - preTime;
-        long add = sub / perNa;
-        long y = perNa - sub % perNa;
-        tokens = (int) Math.min(maxToken, tokens + add);
+        tokens = Math.min(maxToken, tokens + (sub / perNa));
+        long rm = sub % perNa;
         preTime = now;
-        return y;
+        if(tokens >= 0){
+            tokens -= num;
+            return 0;
+        }
+        tokens -= num;
+        return -1 * tokens * perNa - rm;
     }
+
+    public synchronized boolean tryAcquire(int num){
+        long now = System.nanoTime() / 1000;
+        long sub = now - preTime;
+        tokens = Math.min(maxToken, tokens + (sub / perNa));
+        long rm = sub % perNa;
+        preTime = now - rm;
+        if(tokens >= 0){
+            tokens -= num;
+           return true;
+        }
+        return false;
+    }
+
+
 }

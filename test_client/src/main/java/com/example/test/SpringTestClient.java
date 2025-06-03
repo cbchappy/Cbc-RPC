@@ -1,5 +1,6 @@
 package com.example.test;
 
+
 import com.example.client.spring.annotation.RpcClientScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

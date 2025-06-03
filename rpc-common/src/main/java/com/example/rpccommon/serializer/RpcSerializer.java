@@ -29,8 +29,10 @@ public abstract class RpcSerializer {
                 return HessianSerializer.getInstance();
             } else if (code == SerializerCode.JSON) {
                 return JsonSerializer.getInstance();
+            } else if (code == SerializerCode.Kryo) {
+                return KryoSerializer.getInstance();
             }
-            throw new RpcCommonException(RpcExceptionMsg.SERIALIZER_NOTFOUND);
+        throw new RpcCommonException(RpcExceptionMsg.SERIALIZER_NOTFOUND);
     }
 
 

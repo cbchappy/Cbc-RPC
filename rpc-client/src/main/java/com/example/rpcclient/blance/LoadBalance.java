@@ -1,9 +1,8 @@
 package com.example.rpcclient.blance;
 
 
-import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.example.rpcclient.server.InstanceWrapper;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 
 
@@ -13,5 +12,5 @@ import java.util.List;
  * @Description
  */
 public interface LoadBalance {
-    Instance loadBalancingAndGet(List<Instance> instances);
+    InstanceWrapper loadBalancingAndGet(List<InstanceWrapper> instances);
 }

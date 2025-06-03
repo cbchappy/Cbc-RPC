@@ -27,7 +27,7 @@ public abstract class RpcMsg implements Serializable {
     }
 
 
-    private static final AtomicInteger generateId = new AtomicInteger(Integer.MIN_VALUE);//自增, 维护唯一id
+    private static final AtomicInteger generateId = new AtomicInteger(0);//自增, 维护唯一id
     public abstract int getTypeCode();
 
     public static Integer generateId(){

@@ -57,7 +57,7 @@
 
 ### 软件使用环境
 - jdk版本为17
-- 部署了nacos, 版本最好为(1.4.1)
+- 部署了nacos, 版本最好为(2.5.1)
 - 如果使用了springboot, 版本最好为(3.0.5)
 - 确保客户端要远程调用的接口的包名同服务端开放的接口一模一样, 接口名和方法也一样
 - 先在ClientConfig(客户端)和ServerConfig(服务端)配置好参数信息, 内有注释进行解释
@@ -89,6 +89,8 @@ public class TestServer {
 public class TestClient {
 
     public static void main(String[] args) throws InterruptedException {
+        //初始化配置
+        ClientBootstrap.initializeClient();
         //直接调用代理工厂生成要远程调用接口的代理实例即可
         TestRpc proxy = (TestRpc) ProxyFactory.createProxy(TestRpc.class);
         proxy.get();//直接调用方法便可进行远程调用

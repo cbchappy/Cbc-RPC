@@ -1,7 +1,5 @@
 package com.example.rpcclient.handler.preHandler;
 
-import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.example.rpccommon.message.Request;
 import io.netty.channel.Channel;
 
 
@@ -11,5 +9,5 @@ import io.netty.channel.Channel;
  * @Description
  */
 public interface PreHandler {
-    void handler(Request rq, PreHandlerChain chain, int index);
+    Object handler(Channel channel, Object rq, PreHandlerChain chain, int index);
 }

@@ -26,6 +26,8 @@
         <module>test_client</module>
         <module>rpc-server-spring-boot-starter</module>
         <module>rpc-client-spring-boot-starter</module>
+        <module>test_collector</module>
+        <module>test_sr2</module>
     </modules>
 
     <properties>
@@ -38,7 +40,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-            <version>4.1.39.Final</version>
+            <version>4.1.77.Final</version>
         </dependency>
 
         <!--lombok-->
@@ -69,30 +71,43 @@
             <version>4.0.63</version>
         </dependency>
 
+        <!--kryo-->
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>kryo</artifactId>
+            <version>5.5.0</version> <!-- 使用最新稳定版本 -->
+        </dependency>
+
+        <dependency>
+            <groupId>de.javakaffee</groupId>
+            <artifactId>kryo-serializers</artifactId>
+            <version>0.45</version>
+        </dependency>
+
 
     </dependencies>
 
 
-<!--    <dependencyManagement>-->
-<!--        <dependencies>-->
-<!--            &lt;!&ndash; Spring Boot 3.x BOM &ndash;&gt;-->
-<!--            <dependency>-->
-<!--                <groupId>org.springframework.boot</groupId>-->
-<!--                <artifactId>spring-boot-dependencies</artifactId>-->
-<!--                <version>3.0.5</version>-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
-<!--            &lt;!&ndash; Dubbo 3.x（适配Spring Boot 3.x） &ndash;&gt;-->
-<!--            <dependency>-->
-<!--                <groupId>org.apache.dubbo</groupId>-->
-<!--                <artifactId>dubbo-bom</artifactId>-->
-<!--                <version>3.3.4</version> &lt;!&ndash; 推荐稳定版 &ndash;&gt;-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
-<!--        </dependencies>-->
-<!--    </dependencyManagement>-->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Boot 3.x BOM -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>3.0.5</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- Dubbo 3.x（适配Spring Boot 3.x） -->
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-bom</artifactId>
+                <version>3.3.4</version> <!-- 推荐稳定版 -->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>

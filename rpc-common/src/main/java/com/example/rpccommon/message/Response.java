@@ -1,6 +1,7 @@
 package com.example.rpccommon.message;
 
 
+import com.example.rpccommon.constants.ResponseStatus;
 import com.example.rpccommon.constants.RpcMsgTypeCode;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,9 +31,15 @@ public class Response extends RpcMsg{
 
     private String resClassName;
 
+    private transient Throwable throwable;
+
 
     @Override
     public int getTypeCode() {
         return RpcMsgTypeCode.RESPONSE;
+    }
+
+    public boolean isSuccess(){
+        return status.equals(ResponseStatus.SUCCESS.code);
     }
 }

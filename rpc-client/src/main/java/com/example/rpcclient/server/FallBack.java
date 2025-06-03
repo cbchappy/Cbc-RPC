@@ -2,7 +2,6 @@ package com.example.rpcclient.server;
 
 import com.example.rpccommon.exception.RpcException;
 import com.example.rpccommon.message.Request;
-import io.netty.util.concurrent.DefaultPromise;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Method;
@@ -15,6 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 public class FallBack {
+
     private static ConcurrentHashMap<Class<?>, Object> map = new ConcurrentHashMap<>();
 
     public static void registry(Class<?> cls,  Object obj){

@@ -1,8 +1,7 @@
 package com.example.rpcclient.blance;
 
-import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.example.rpcclient.server.InstanceWrapper;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -14,7 +13,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RandomLoadBalance implements LoadBalance{
 
     @Override
-    public Instance loadBalancingAndGet(List<Instance> instances) {
+    public InstanceWrapper loadBalancingAndGet(List<InstanceWrapper> instances) {
         ThreadLocalRandom current = ThreadLocalRandom.current();
         int i = current.nextInt(instances.size());
         return instances.get(i);

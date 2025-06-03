@@ -12,4 +12,6 @@ public class SerializerCode {
 
     public static final Integer HESSIAN = 2;
 
+    public static final Integer Kryo = 3;
+
 }

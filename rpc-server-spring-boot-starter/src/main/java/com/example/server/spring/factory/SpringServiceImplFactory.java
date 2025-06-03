@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationContext;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Author Cbc
@@ -19,6 +20,8 @@ public class SpringServiceImplFactory implements ServiceImplFactory {
     //存储包含了@OpenRpcService的实现类的接口, 进行一些约束, 防止调用到没有开放的接口
     private final Set<Class<?>> set = new HashSet<>();
 
+    private final ConcurrentHashMap<Class<?>, Object> beanMap = new ConcurrentHashMap<>();
+
 
     @Override
     public void openServiceImpl(Class<?> implClass, Class<?> interfaceClass) throws IOException {
@@ -30,7 +33,12 @@ public class SpringServiceImplFactory implements ServiceImplFactory {
         if(!set.contains(interfaceClass)){
             return null;
         }
-        return applicationContext.getBean(interfaceClass);
+        Object o = beanMap.get(interfaceClass);
+        if(o == null){
+            o = applicationContext.getBean(interfaceClass);
+            beanMap.put(interfaceClass, o);
+        }
+        return o;
     }
 
     public void setApplicationContext(ApplicationContext applicationContext){

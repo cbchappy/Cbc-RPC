@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -41,6 +42,8 @@ public class Request extends RpcMsg{
     private Object[] args;
 
    private String[] argsClassNames;//json序列化必需
+
+    private Map<String, Object> attachment;
 
 
 

@@ -1,8 +1,7 @@
 package com.example.rpcclient.blance;
 
-import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.example.rpcclient.server.InstanceWrapper;
 
-import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -16,7 +15,7 @@ public class RoundRobinLoadBalance implements LoadBalance{
     private final static AtomicInteger index = new AtomicInteger(0);
 
     @Override
-    public Instance loadBalancingAndGet(List<Instance> instances) {
+    public InstanceWrapper loadBalancingAndGet(List<InstanceWrapper> instances) {
         int i = index.getAndIncrement() % instances.size();
         return instances.get(i);
     }

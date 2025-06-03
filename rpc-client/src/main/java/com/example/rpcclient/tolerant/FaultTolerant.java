@@ -1,6 +1,6 @@
 package com.example.rpcclient.tolerant;
 
-import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.example.rpcclient.server.InstanceWrapper;
 import com.example.rpccommon.message.Request;
 
 /**
@@ -9,5 +9,5 @@ import com.example.rpccommon.message.Request;
  * @Description 容错处理
  */
 public interface FaultTolerant {
-    Object faultHandler(Instance instance, Throwable cause, Request request);
+    Object faultHandler(InstanceWrapper wrapper, Throwable cause, Request request);
 }
