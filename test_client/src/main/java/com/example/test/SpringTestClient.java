@@ -1,7 +1,6 @@
 package com.example.test;
 
 
-import com.example.client.spring.annotation.RpcClientScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -11,7 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Description
  */
 @SpringBootApplication
-@RpcClientScan(values = {"com.example.test.service"})
+//@RpcClientScan(values = {"com.example.test.service"})
 public class SpringTestClient {
     //监控中心  应该提供扩展点和接口来无嵌入实现
     //调用耗时 出错次数  包大小 网速情况 分客户端和服务端

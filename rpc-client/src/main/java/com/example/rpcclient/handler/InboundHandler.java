@@ -1,5 +1,6 @@
 package com.example.rpcclient.handler;
 
+import com.example.rpcclient.server.InstanceWrapper;
 import com.example.rpcclient.server.InvokeServer;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -11,9 +12,14 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * @Description
  */
 public class InboundHandler extends ChannelInboundHandlerAdapter {
+    private InstanceWrapper wrapper;
+
+    public InboundHandler(InstanceWrapper wrapper){
+        this.wrapper = wrapper;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                InvokeServer.decodeAndHandler((ByteBuf) msg, ctx.channel());
+                InvokeServer.decodeAndHandler((ByteBuf) msg, wrapper);
     }
 }

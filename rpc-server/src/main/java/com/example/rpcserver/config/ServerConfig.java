@@ -38,5 +38,7 @@ public class ServerConfig {
 
     public static Integer FUSING_RESTART_TIME = 60 * 60; //熔断持续时间, 结束后重新开启服务
 
+    public static Boolean TRACE = false;
+
 
 }

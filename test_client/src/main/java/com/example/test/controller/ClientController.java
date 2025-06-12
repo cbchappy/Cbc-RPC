@@ -2,6 +2,7 @@ package com.example.test.controller;
 
 import com.example.test.service.TestRpc;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class ClientController {
     @Autowired
-//    @DubboReference
+    @DubboReference
     private TestRpc testServer;
 
     @RequestMapping("")

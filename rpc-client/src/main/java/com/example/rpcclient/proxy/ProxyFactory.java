@@ -1,5 +1,6 @@
 package com.example.rpcclient.proxy;
 
+import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.server.InvokeServer;
 import com.example.rpccommon.message.Request;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @Author Cbc
@@ -36,6 +38,7 @@ public class ProxyFactory{
                     .args(args)
                     .interfaceName(proxy.getClass().getInterfaces()[0].getName())
                     .build();
+            request.setRetryNum(ClientConfig.RETRY_NUM);
             return InvokeServer.invoke(request);
         }
     }

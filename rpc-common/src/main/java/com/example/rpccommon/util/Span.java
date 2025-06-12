@@ -23,5 +23,5 @@ public class Span {
     private boolean isSuccess;
     private String exceptionMsg;
     private int status;
-    private int type;// 0开始 //1结束 //中间
+    private int type;// 0开始 //1结束 2//中间
 }

@@ -8,6 +8,7 @@ import com.example.rpcclient.handler.InboundHandler;
 import com.example.rpcclient.tolerant.Failover;
 import com.example.rpcclient.tolerant.FaultTolerant;
 import com.example.rpcclient.tolerant.Forking;
+import com.example.rpccommon.RpcContext;
 import com.example.rpccommon.config.ProtocolConfig;
 import com.example.rpccommon.constants.RpcMsgTypeCode;
 import com.example.rpccommon.message.PingAckMsg;
@@ -16,6 +17,7 @@ import com.example.rpccommon.message.Response;
 import com.example.rpccommon.message.RpcMsg;
 import com.example.rpccommon.protocol.ProtocolFrameDecoder;
 import com.example.rpccommon.serializer.RpcSerializer;
+import com.example.rpccommon.util.BatchExecutorQueue;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -77,8 +79,20 @@ public class InvokeServer {
         try {
             ThreadLessExecutor lessExecutor = new ThreadLessExecutor();
             exeMap.put(request.getMsgId(), lessExecutor);
-            encodeAndWriteFlush(request, instance.getChannel());
-            return (Response) lessExecutor.await(OVERTIME, TimeUnit.SECONDS);
+            encodeAndWriteFlush(request, instance);
+
+            Long term = (Long) RpcContext.getContext().get("term");
+
+            if(term == null){
+                return (Response) lessExecutor.await(OVERTIME, TimeUnit.SECONDS);
+            }
+
+            long over = System.currentTimeMillis() - term;
+            if(over < 0){
+                throw new RuntimeException("请求调用超时!");
+            }
+
+            return (Response) lessExecutor.await(over, TimeUnit.MILLISECONDS);
 
         }catch (Exception e){
             log.error("任务报错id:{}", request.getMsgId());
@@ -112,7 +126,7 @@ public class InvokeServer {
                         @Override
                         protected void initChannel(NioSocketChannel ch) throws Exception {
                             ch.pipeline().addLast(new ProtocolFrameDecoder());//解码
-                            ch.pipeline().addLast(new InboundHandler());
+                            ch.pipeline().addLast(new InboundHandler(wrapper));
                         }
                     })
                     .option(ChannelOption.TCP_NODELAY, true)
@@ -123,13 +137,14 @@ public class InvokeServer {
                     .channel();
 
             wrapper.setChannel(ch);
+            wrapper.setQueue(new BatchExecutorQueue<>(ch));
 
         }
 
     }
 
-    public static void encodeAndWriteFlush(RpcMsg msg, Channel channel) {
-        ByteBuf out = channel.alloc().buffer();
+    public static void encodeAndWriteFlush(RpcMsg msg, InstanceWrapper wrapper) {
+        ByteBuf out = wrapper.getChannel().alloc().buffer();
         //版本 1
         out.writeByte(ProtocolConfig.getVersion());
         //魔数 4
@@ -158,11 +173,13 @@ public class InvokeServer {
         out.writeInt(bytes.length);
         out.writeBytes(bytes);
 
-        channel.eventLoop().execute(() -> channel.writeAndFlush(out));
+        wrapper.getQueue().enqueue(out, wrapper.getChannel().eventLoop());
+
+//        channel.eventLoop().execute(() -> channel.writeAndFlush(out));
     }
 
 
-    public static void decodeAndHandler(ByteBuf in, Channel channel) {
+    public static void decodeAndHandler(ByteBuf in, InstanceWrapper wrapper) {
         //版本 1
         byte version = in.readByte();
         //魔数 4
@@ -182,7 +199,7 @@ public class InvokeServer {
             return;
         } else if (msgTypeCode == RpcMsgTypeCode.PINGMSG) {
             in.release();
-            encodeAndWriteFlush(new PingAckMsg(), channel);
+            encodeAndWriteFlush(new PingAckMsg(), wrapper);
             return;
         }
 

@@ -1,6 +1,8 @@
 package com.example.rpcclient.server;
 
 import com.alibaba.nacos.api.exception.NacosException;
+import com.example.rpcclient.config.ClientConfig;
+import com.example.rpcclient.filter.TraceFilter;
 import com.example.rpccommon.util.SpanReportClient;
 
 /**
@@ -19,7 +21,10 @@ public class ClientBootstrap {
         InstanceManageCenter.findServer();
         LoadBalanceServer.initialize();
         InvokeServer.initialize();
-        //todo 启动链路追踪收集
-        SpanReportClient.startReport();
+
+        if(ClientConfig.TRACE){
+            //todo 启动链路追踪收集
+            SpanReportClient.startReport();
+        }
     }
 }

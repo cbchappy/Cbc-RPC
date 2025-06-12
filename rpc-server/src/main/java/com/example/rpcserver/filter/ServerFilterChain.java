@@ -2,6 +2,7 @@ package com.example.rpcserver.filter;
 
 import com.example.rpccommon.message.Request;
 import com.example.rpccommon.message.Response;
+import com.example.rpcserver.config.ServerConfig;
 import com.example.rpcserver.server.RpcServer;
 import io.netty.channel.Channel;
 
@@ -29,7 +30,9 @@ public class ServerFilterChain {
 
     public static ServerFilterChain createChain(){
         ServerFilterChain chain = new ServerFilterChain();
-        chain.addFilter(new TraceFilter());
+       if(ServerConfig.TRACE){
+           chain.addFilter(new TraceFilter());
+       }
         chain.addFilter(new LimiterFilter());
         return chain;
     }

@@ -13,6 +13,7 @@ import com.example.rpccommon.exception.RpcException;
 import com.example.rpccommon.message.*;
 import com.example.rpccommon.protocol.ProtocolFrameDecoder;
 import com.example.rpccommon.serializer.RpcSerializer;
+import com.example.rpccommon.util.BatchExecutorQueue;
 import com.example.rpccommon.util.SpanReportClient;
 import com.example.rpcserver.config.ServerConfig;
 import com.example.rpcserver.factory.DefaultServiceImplFactory;
@@ -61,6 +62,8 @@ public class RpcServer {
 
     private static Instance instance;//服务实例
 
+    private static ConcurrentHashMap<Channel, BatchExecutorQueue<ByteBuf>> queueMap = new ConcurrentHashMap<>();
+
     private static ServiceImplFactory implFactory = new DefaultServiceImplFactory();//远程调用服务类实现工厂
 
     private static final ExecutorService executorService = new ThreadPoolExecutor(200, 200,
@@ -93,7 +96,7 @@ public class RpcServer {
                         ch.pipeline().addLast(new IdleStateHandler(READ_IDLE_TIME, 0, 0, TimeUnit.SECONDS));
                         ch.pipeline().addLast(new ReadIdleStateEventHandler());//读空闲处理器
                         ch.pipeline().addLast(new InboundHandler());
-
+                        queueMap.put(ch, new BatchExecutorQueue<>(ch));
                     }
                 })
                 .childOption(ChannelOption.TCP_NODELAY, true)
@@ -101,8 +104,10 @@ public class RpcServer {
                 .bind(REGISTRY_PORT)
                 .sync()
                 .channel();
-        //todo 启动链路追踪收集
-        SpanReportClient.startReport();
+
+        if(TRACE){
+            SpanReportClient.startReport();
+        }
 
         registryToNacos();
 
@@ -178,7 +183,8 @@ public class RpcServer {
                 log.debug("编码, magic:{}, version:{}, msgTypeCode:{}, serializerTypeCode:{}, len:{}",
                         ProtocolConfig.getMagic(), ProtocolConfig.getVersion(), msgTypeCode, serializerTypeCode, bytes.length);
 
-                channel.eventLoop().execute(() -> channel.writeAndFlush(out));
+//                channel.eventLoop().execute(() -> channel.writeAndFlush(out));
+        queueMap.get(channel).enqueue(out, channel.eventLoop());
 
 
 
@@ -245,7 +251,6 @@ public class RpcServer {
         Response response = Response.builder()
                 .msgId(msg.getMsgId())
                 .build();
-
 
         String key = msg.getInterfaceName() +
                 "-" +

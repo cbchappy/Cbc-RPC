@@ -1,5 +1,6 @@
 package com.example.rpcclient.filter;
 
+import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.server.InstanceWrapper;
 import com.example.rpcclient.server.InvokeServer;
 import com.example.rpccommon.message.Request;
@@ -29,7 +30,9 @@ public class InvokeFilterChain {
 
     public static InvokeFilterChain createChain(){
         InvokeFilterChain chain = new InvokeFilterChain();
-        chain.addFilter(new TraceFilter());
+        if(ClientConfig.TRACE){
+            chain.addFilter(new TraceFilter());
+        }
         chain.addFilter(new InvokeEventFilter());
         chain.addFilter(new CircuitBreakerFilter());
         return chain;

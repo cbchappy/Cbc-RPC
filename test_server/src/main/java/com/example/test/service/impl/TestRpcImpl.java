@@ -1,11 +1,8 @@
 package com.example.test.service.impl;
 
 
-import com.example.server.spring.annotation.OpenRpcService;
-import com.example.test.service.TestR2;
 import com.example.test.service.TestRpc;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import org.apache.dubbo.config.annotation.DubboService;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -17,13 +14,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 //@Service
 
 
-@OpenRpcService
-//@DubboService
-@Service
+//@OpenRpcService
+@DubboService
+//@Service
 public class TestRpcImpl implements TestRpc {
 
-    @Autowired
-    private TestR2 r2;
+//    @Autowired
+//    private TestR2 r2;
     private AtomicInteger count = new AtomicInteger(0);
     private AtomicInteger ex = new AtomicInteger(0);
 
@@ -41,7 +38,7 @@ public class TestRpcImpl implements TestRpc {
 //        log.debug("\ncount: {}, ex: {}\n", count.get(), ex.get());Tthrow new RuntimeException()
 //        return "test_res";
 
-       return r2.getStr();
+       return "r2.getStr()";
 
     }
 }

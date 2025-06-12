@@ -22,7 +22,4 @@ public class InvokeCompleteEvent extends InvokeEvent{
     private Request request;
     private Response response;
 
-    public boolean isSuccess(){
-        return throwable != null && response.getStatus().equals(ResponseStatus.SUCCESS.code);
-    }
 }

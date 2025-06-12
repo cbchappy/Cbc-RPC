@@ -2,6 +2,8 @@ package com.example.rpcclient.server;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.example.rpcclient.tolerant.CircuitBreaker;
+import com.example.rpccommon.util.BatchExecutorQueue;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import lombok.Builder;
 import lombok.Data;
@@ -20,5 +22,5 @@ public class InstanceWrapper {
     private  Channel channel;
     private  CircuitBreaker breaker;
     private  Object lock;
-
+    private BatchExecutorQueue<ByteBuf> queue;
 }

@@ -2,6 +2,8 @@ package com.example.rpccommon;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -10,26 +12,26 @@ import java.util.function.Supplier;
  * @Description
  */
 public class RpcContext {
-    private static ThreadLocal<Map<String, Object>> clientAttachment = ThreadLocal.withInitial(HashMap::new);
-    private static ThreadLocal<Map<String, Object>> serverAttachment = ThreadLocal.withInitial(HashMap::new);
 
-    public static Object getClientAttachment(String s){
-        return clientAttachment.get().get(s);
+    private Map<Object, Object> map = new HashMap<>();
+
+    private static ThreadLocal<RpcContext> contextThreadLocal = ThreadLocal.withInitial(RpcContext::new);
+
+
+    public static RpcContext getContext(){
+        return contextThreadLocal.get();
     }
 
-    public static Object getServerAttachment(String s){
-        return serverAttachment.get().get(s);
+    public void put(Object key, Object value){
+        this.map.put(key, value);
     }
-    public static void putServerAttachment(String s, Object v){
-        serverAttachment.get().put(s, v);
+
+    public Object remove(Object key){
+        return this.map.remove(key);
     }
-    public static void putClientAttachment(String s, Object v){
-        clientAttachment.get().put(s, v);
+
+    public Object get(Object key){
+        return this.map.get(key);
     }
-    public static Object removeServerAttachment(String s){
-        return serverAttachment.get().remove(s);
-    }
-    public static void removeClientAttachment(String s){
-        clientAttachment.get().remove(s);
-    }
+
 }

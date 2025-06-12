@@ -39,5 +39,6 @@ public class ClientConfig {
 
     public static Boolean MONITOR_LOG = true;//服务实例信息详细监控日志
 
+    public static Boolean TRACE = false;
 
 }

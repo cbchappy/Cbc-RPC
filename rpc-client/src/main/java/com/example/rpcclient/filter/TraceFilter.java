@@ -1,7 +1,9 @@
 package com.example.rpcclient.filter;
 
+import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.server.InstanceWrapper;
 import com.example.rpccommon.RpcContext;
+import com.example.rpccommon.constants.ResponseStatus;
 import com.example.rpccommon.message.Request;
 import com.example.rpccommon.message.Response;
 import com.example.rpccommon.util.RpcUtils;
@@ -12,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @Author Cbc
@@ -26,16 +29,29 @@ public class TraceFilter implements InvokeFilter{
             attachment = new HashMap<>();
             request.setAttachment(attachment);
         }
-        String traceId = (String) RpcContext.getServerAttachment("traceId");
-        String parentSpanId = (String) RpcContext.getServerAttachment("spanId");
+        RpcContext context = RpcContext.getContext();
+        String traceId = (String) context.get("traceId");
+        String parentSpanId = (String) context.get("spanId");
         if(traceId == null || parentSpanId == null){
             traceId = RpcUtils.createTraceId();
             parentSpanId = null;
+        }else {
+            context.put("use", true);
+            request.setRetryNum(0);
         }
 
+
         String spanId = RpcUtils.generateSpanId(parentSpanId);
+
+        Long term = (Long) context.get("term");
         attachment.put("traceId", traceId);
         attachment.put("spanId", spanId);
+        attachment.put("term",term == null ? System.currentTimeMillis() + ClientConfig.OVERTIME * 1000 : term);
+
+        Response response = chain.doFilter(wrapper, request, index);
+        if(!response.isSuccess() && !response.getStatus().equals(ResponseStatus.MOCK.code) && request.getRetryNum() > 0){
+            return response;
+        }
         Span span = Span.builder()
                 .traceId(traceId)
                 .parentSpanId(parentSpanId)
@@ -48,7 +64,7 @@ public class TraceFilter implements InvokeFilter{
                 .startTime(System.nanoTime())
                 .build();
 
-        Response response = chain.doFilter(wrapper, request, index);
+
         span.setStatus(request.getTypeCode());
         span.setEndTime(System.nanoTime());
         span.setSuccess(true);
@@ -62,8 +78,7 @@ public class TraceFilter implements InvokeFilter{
                 span.setExceptionMsg(outputStream.toString());
             }
         }
-        RpcContext.removeServerAttachment("traceId");
-        RpcContext.removeServerAttachment("spanId");
+
         SpanReportClient.report(span);
         return response;
     }

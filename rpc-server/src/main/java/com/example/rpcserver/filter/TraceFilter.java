@@ -24,12 +24,16 @@ public class TraceFilter implements ServerFilter{
         Map<String, Object> attachment = request.getAttachment();
         String traceId = (String) attachment.get("traceId");
         String parentSpanId = (String) attachment.get("spanId");
+        Long over = (Long) attachment.get("term");
         if(traceId == null || parentSpanId == null){
             return chain.doFilter(request, channel, index);
         }
+        RpcContext context = RpcContext.getContext();
         String spanId = RpcUtils.generateSpanId(parentSpanId);
-        RpcContext.putServerAttachment("traceId", traceId);
-        RpcContext.putServerAttachment("spanId", spanId);
+        context.put("traceId", traceId);
+        context.put("spanId", spanId);
+        context.put("use", false);
+        context.put("term", over);
         Span span = Span.builder()
                 .traceId(traceId)
                 .parentSpanId(parentSpanId)
@@ -56,9 +60,12 @@ public class TraceFilter implements ServerFilter{
                 throwable.printStackTrace();
             }
         }
-        Object o = RpcContext.removeServerAttachment("traceId");
-        RpcContext.removeServerAttachment("spanId");
-       int code = o == null ? 2 : 1;
+        context.remove("traceId");
+        context.remove("spanId");
+        context.remove("term");
+        Object use = context.remove("use");
+
+        int code = (boolean) use ? 2 : 1;
        span.setType(code);
         SpanReportClient.report(span);
         return response;

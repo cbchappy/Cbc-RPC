@@ -20,27 +20,31 @@ import lombok.extern.slf4j.Slf4j;
 public class Failover implements FaultTolerant{
     @Override
     public Object faultHandler(InstanceWrapper wrapper, Throwable cause, Request request) {
-            int num = 0;
+
             Integer status = null;
             Response response = null;
             while (true){
-                num++;
                 try {
-                   response  = InvokeServer.doFilterAndGet(request, wrapper);
+                    response  = InvokeServer.doFilterAndGet(request, wrapper);
                     status = response.getStatus();
-                    if(!status.equals(ResponseStatus.SUCCESS.code)){
+
+                    if(!response.isSuccess()){
+                        if(response.getStatus().equals(ResponseStatus.MOCK.code)){
+                            return response.getRes();
+                        }
                         throw new RpcException(ResponseStatus.getEnumByCode(status).msg);
                     }
                     return response.getRes();
                 } catch (Throwable e) {
-                    wrapper = LoadBalanceServer.getOtherInstance(wrapper);
-                    if (num == ClientConfig.RETRY_NUM) {
+                    if(request.getRetryNum() > 0){
+                        request.setRetryNum(request.getRetryNum() - 1);
+                        wrapper = LoadBalanceServer.getOtherInstance(wrapper);
+                    }else {
                         if((status == null || status.intValue() != ResponseStatus.MOCK.code)){
                             throw new RpcException(e);
                         }else {
                             return response.getRes();
                         }
-
                     }
 
                 }
