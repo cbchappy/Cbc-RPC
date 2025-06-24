@@ -5,7 +5,6 @@ import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingFactory;
 import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.example.rpccommon.config.ProtocolConfig;
 import com.example.rpccommon.constants.ResponseStatus;
 import com.example.rpccommon.constants.RpcMsgTypeCode;
 import com.example.rpccommon.constants.SerializerCode;

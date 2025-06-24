@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * @DateTime 2024/12/7 19:45
  * @Description 建造者模式
  */
-//todo 完善消息类型的变量，删除冗余
 @Data
 @AllArgsConstructor
 public class Request implements Serializable {
