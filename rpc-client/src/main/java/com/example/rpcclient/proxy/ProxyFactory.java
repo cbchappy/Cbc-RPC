@@ -2,12 +2,14 @@ package com.example.rpcclient.proxy;
 
 import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.server.InvokeServer;
+import com.example.rpccommon.RpcContext;
 import com.example.rpccommon.message.Request;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -38,8 +40,14 @@ public class ProxyFactory{
                     .args(args)
                     .interfaceName(proxy.getClass().getInterfaces()[0].getName())
                     .build();
+            request.setSerializeCode(ClientConfig.SERIALIZER_TYPE_CODE.byteValue());
             request.setRetryNum(ClientConfig.RETRY_NUM);
-            return InvokeServer.invoke(request);
+            Object res = InvokeServer.invoke(request);
+            if(!(res instanceof CompletableFuture<?>)){
+                return res;
+            }
+            RpcContext.getContext().put("future", res);
+            return null;
         }
     }
 }

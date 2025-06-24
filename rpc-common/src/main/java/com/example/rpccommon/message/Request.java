@@ -7,8 +7,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
+import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -16,9 +19,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @DateTime 2024/12/7 19:45
  * @Description 建造者模式
  */
+//todo 完善消息类型的变量，删除冗余
 @Data
 @AllArgsConstructor
-public class Request extends RpcMsg{
+public class Request implements Serializable {
+
+    private static AtomicLong createId = new AtomicLong(0);
 
     public Request(){
 
@@ -28,12 +34,18 @@ public class Request extends RpcMsg{
         this.interfaceName = builder.interfaceName;
         this.args = builder.args;
         this.methodName = builder.methodName;
+        this.rqId = createId.getAndIncrement();
+        this.attachment = new HashMap<>();
         perfectRequest(this);
     }
 
-    private Integer msgId;
-
     private transient Integer retryNum;//重试次数
+
+    private transient Byte serializeCode;
+
+    private transient Long rqId;
+
+    private boolean isAsync;
 
     private String interfaceName;
 
@@ -50,7 +62,7 @@ public class Request extends RpcMsg{
 
     //完善Request的参数
     private static void perfectRequest(Request request){
-        request.msgId = generateId();
+
         request.retryNum = 0;
         Object[] a = request.args;
         if(a != null){
@@ -65,10 +77,7 @@ public class Request extends RpcMsg{
         return new Builder();
     }
 
-    @Override
-    public int getTypeCode() {
-        return RpcMsgTypeCode.REQUEST;
-    }
+
 
     public static class Builder{
         private String interfaceName;

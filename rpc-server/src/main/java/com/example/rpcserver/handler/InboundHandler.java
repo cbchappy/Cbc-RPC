@@ -18,6 +18,6 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        RpcServer.asyncExecute(() -> RpcServer.decodeAndHandler((ByteBuf) msg, ctx.channel()));
+        RpcServer.asyncHandlePack((ByteBuf) msg, ctx.channel());
     }
 }

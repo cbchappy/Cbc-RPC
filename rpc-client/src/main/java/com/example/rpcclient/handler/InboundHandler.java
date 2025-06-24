@@ -12,7 +12,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
  * @Description
  */
 public class InboundHandler extends ChannelInboundHandlerAdapter {
-    private InstanceWrapper wrapper;
+    private final InstanceWrapper wrapper;
 
     public InboundHandler(InstanceWrapper wrapper){
         this.wrapper = wrapper;
@@ -20,6 +20,6 @@ public class InboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-                InvokeServer.decodeAndHandler((ByteBuf) msg, wrapper);
+                InvokeServer.PackHandle((ByteBuf) msg, wrapper);
     }
 }

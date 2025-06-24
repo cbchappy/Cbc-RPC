@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public abstract class InvokeEventListener {
     private static final Map<Class<?>, List<InvokeEventListener>> listMap = new ConcurrentHashMap<>();
-    abstract void listen(InvokeEvent event);
+    public abstract void listen(InvokeEvent event);
 
     public static  <T extends InvokeEvent> void addListener(InvokeEventListener listener, Class<T> eventClass){
         List<InvokeEventListener> listenerList = listMap.computeIfAbsent(eventClass, k -> new ArrayList<>());

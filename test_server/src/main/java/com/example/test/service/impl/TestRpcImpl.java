@@ -1,8 +1,8 @@
 package com.example.test.service.impl;
 
 
+import com.example.server.spring.annotation.OpenRpcService;
 import com.example.test.service.TestRpc;
-import org.apache.dubbo.config.annotation.DubboService;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 //@Service
 
 
-//@OpenRpcService
-@DubboService
+@OpenRpcService
+//@DubboService
 //@Service
 public class TestRpcImpl implements TestRpc {
 
@@ -29,16 +29,20 @@ public class TestRpcImpl implements TestRpc {
     }
 
     @Override
-    public String get() {
+    public String get(){
 //        count.addAndGet(1);
 //        if(count.get() % 20 == 0){
 //            ex.addAndGet(1);
 //            throw new RuntimeException();
 //        }
 //        log.debug("\ncount: {}, ex: {}\n", count.get(), ex.get());Tthrow new RuntimeException()
-//        return "test_res";
-
-       return "r2.getStr()";
+////        return "test_res";
+//        try {
+////            Thread.sleep(4000);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+        return "r2.getStr()";
 
     }
 }

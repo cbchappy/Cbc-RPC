@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
+
 
 /**
  * @Author Cbc
@@ -16,14 +18,18 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
-public class Response extends RpcMsg{
+public class Response implements Serializable {
 
-    public Response(){
+    public Response() {
 
     }
 
 
-    private Integer msgId;
+    private transient Byte serializeCode;
+
+    private transient Long rqId;
+
+    private transient boolean isAsync;
 
     private Integer status;
 
@@ -34,12 +40,7 @@ public class Response extends RpcMsg{
     private transient Throwable throwable;
 
 
-    @Override
-    public int getTypeCode() {
-        return RpcMsgTypeCode.RESPONSE;
-    }
-
-    public boolean isSuccess(){
+    public boolean isSuccess() {
         return status.equals(ResponseStatus.SUCCESS.code);
     }
 }

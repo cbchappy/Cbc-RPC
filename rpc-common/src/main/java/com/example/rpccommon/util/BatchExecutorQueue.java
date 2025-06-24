@@ -3,6 +3,7 @@ package com.example.rpccommon.util;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
+import io.netty.util.internal.shaded.org.jctools.queues.MpscUnboundedArrayQueue;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -31,7 +32,7 @@ public class BatchExecutorQueue<T> {
     }
 
     public BatchExecutorQueue(int chunkSize, Channel channel) {
-        this.queue = new ConcurrentLinkedQueue<>();
+        this.queue = new MpscUnboundedArrayQueue<>(10000);
         this.scheduled = new AtomicBoolean(false);
         this.chunkSize = chunkSize;
         this.list = new ArrayList<>(chunkSize + 2);

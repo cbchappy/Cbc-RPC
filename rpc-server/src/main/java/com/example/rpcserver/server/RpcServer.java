@@ -14,6 +14,8 @@ import com.example.rpccommon.message.*;
 import com.example.rpccommon.protocol.ProtocolFrameDecoder;
 import com.example.rpccommon.serializer.RpcSerializer;
 import com.example.rpccommon.util.BatchExecutorQueue;
+import com.example.rpccommon.util.MyBatchQueue;
+import com.example.rpccommon.util.RPCCodec;
 import com.example.rpccommon.util.SpanReportClient;
 import com.example.rpcserver.config.ServerConfig;
 import com.example.rpcserver.factory.DefaultServiceImplFactory;
@@ -23,6 +25,7 @@ import com.example.rpcserver.handler.InboundHandler;
 import com.example.rpcserver.handler.ReadIdleStateEventHandler;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -62,7 +65,7 @@ public class RpcServer {
 
     private static Instance instance;//服务实例
 
-    private static ConcurrentHashMap<Channel, BatchExecutorQueue<ByteBuf>> queueMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Channel, MyBatchQueue> queueMap = new ConcurrentHashMap<>();
 
     private static ServiceImplFactory implFactory = new DefaultServiceImplFactory();//远程调用服务类实现工厂
 
@@ -71,8 +74,6 @@ public class RpcServer {
             new SynchronousQueue<>(), (r, executor) -> {
                 throw new RpcException("任务溢出!!!");
             });//业务线程池
-
-
 
 
     public static void setServiceImplFactory(ServiceImplFactory implFactory){
@@ -96,11 +97,12 @@ public class RpcServer {
                         ch.pipeline().addLast(new IdleStateHandler(READ_IDLE_TIME, 0, 0, TimeUnit.SECONDS));
                         ch.pipeline().addLast(new ReadIdleStateEventHandler());//读空闲处理器
                         ch.pipeline().addLast(new InboundHandler());
-                        queueMap.put(ch, new BatchExecutorQueue<>(ch));
+                        queueMap.put(ch, new MyBatchQueue(ch));
                     }
                 })
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .bind(REGISTRY_PORT)
                 .sync()
                 .channel();
@@ -138,118 +140,13 @@ public class RpcServer {
     }
 
 
-    public static void asyncExecute(Runnable runnable){
-        executorService.execute(runnable);
-    }
 
-
-    public static void encodeAndWriteFlush(RpcMsg msg, Channel channel){
-
-                ByteBuf out = channel.alloc().buffer();
-                //从上下文获取 序列化方式 1
-                Object o = channel.attr(AttributeKey.valueOf("serializerTypeCode")).get();
-                //获取序列化方式
-                byte serializerTypeCode = o == null ? SerializerCode.JDK.byteValue() : (byte) o;
-
-                //版本号 1
-                out.writeByte(ProtocolConfig.getVersion());
-                //魔数 4
-                out.writeInt(ProtocolConfig.getMagic());
-                //请求类型 1
-                int msgTypeCode = msg.getTypeCode();
-                out.writeByte(msgTypeCode);
-                //额外消息码
-                out.writeByte(0);
-                //序列化方式 1
-                out.writeByte(serializerTypeCode);
-
-                if(msgTypeCode != RpcMsgTypeCode.RESPONSE){
-                    out.writeInt(0);
-                    out.writeInt(0);
-                    channel.writeAndFlush(out);
-                    return;
-                }
-
-                out.writeInt(((Response) msg).getMsgId());
-
-                RpcSerializer serializer = RpcSerializer.getSerializerByCode(serializerTypeCode);
-
-                byte[] bytes = serializer.serialize(msg);
-                //内容长度 4
-                out.writeInt(bytes.length);
-
-                out.writeBytes(bytes);
-
-                log.debug("编码, magic:{}, version:{}, msgTypeCode:{}, serializerTypeCode:{}, len:{}",
-                        ProtocolConfig.getMagic(), ProtocolConfig.getVersion(), msgTypeCode, serializerTypeCode, bytes.length);
-
-//                channel.eventLoop().execute(() -> channel.writeAndFlush(out));
-        queueMap.get(channel).enqueue(out, channel.eventLoop());
-
-
-
-    }
-
-
-
-    public static void decodeAndHandler(ByteBuf in, Channel channel){
-
-        log.debug("ByteBuf-in的长度:{}", in.readableBytes());
-
-        byte version = in.readByte();//版本
-
-        int magic = in.readInt();//魔数
-
-        //校验失败
-        if(magic !=  ProtocolConfig.getMagic() || version != ProtocolConfig.getVersion()){
-            log.error("协议校验失败, 关闭channel");
-            channel.writeAndFlush(new CloseMsg(CloseMsg.CloseStatus.protocolError));
-            channel.close();
-            in.clear();//清除, 表示已经读完了, 不用自己释放, 本身有释放的功能
-            return;
-        }
-
-        byte msgTypeCode = in.readByte();//消息类型
-
-        byte extra = in.readByte();//额外
-
-        byte serializerTypeCode = in.readByte();//序列化方式
-
-        int msgId = in.readInt();//消息id
-
-        int len = in.readInt();//长度
-
-        if(msgTypeCode == RpcMsgTypeCode.PINGMSG){
-            channel.writeAndFlush(new PingAckMsg());
-            return;
-        }
-
-        //将序列化方式添加进参数
-        channel.attr(AttributeKey.valueOf("serializerTypeCode")).set(serializerTypeCode);
-
-
-        byte[] bytes = new byte[len];
-        in.readBytes(bytes, 0, len);
-
-        log.debug("解码, magic:{}, version:{}, msgTypeCode:{}, serializerTypeCode:{}, len:{}",
-                magic, version, msgTypeCode, serializerTypeCode, len);
-
-        RpcSerializer serializer = RpcSerializer.getSerializerByCode(serializerTypeCode);
-        Class<?> aClass = RpcMsg.getClassByTypeCode(msgTypeCode);
-        Object o = serializer.deSerialize(bytes, aClass);
-        in.release();
-        //过滤并处理
-        Response response = filterChain.doFilter((Request) o, channel, 0);
-
-        encodeAndWriteFlush(response, channel);
-
-    }
-
-    public static Response handlerRequest(Request msg, Channel channel){
+    public static Response handleRequest(Request msg, Channel channel){
 
         Class<?> intefaceClass = null;
         Response response = Response.builder()
-                .msgId(msg.getMsgId())
+                .rqId(msg.getRqId())
+                .serializeCode(msg.getSerializeCode())
                 .build();
 
         String key = msg.getInterfaceName() +
@@ -271,7 +168,6 @@ public class RpcServer {
             } catch (IllegalAccessException | InvocationTargetException e) {
                 log.debug(ResponseStatus.SERVER_EXCEPTION.msg);
                 response.setStatus(ResponseStatus.SERVER_EXCEPTION.code);
-                RpcServer.encodeAndWriteFlush(response, channel);
                 response.setThrowable(e);
                 return response;
             }
@@ -349,5 +245,43 @@ public class RpcServer {
             return response;
         }
 
+    }
+
+    public static void writeResponse(Response response, Channel channel){
+        ByteBuf buf = RPCCodec.encodeResponse(response, channel);
+        MyBatchQueue queue = queueMap.get(channel);
+        queue.enqueue(buf);
+    }
+
+    public static void asyncHandlePack(ByteBuf buf, Channel channel){
+        executorService.execute(() -> handlePack(buf, channel));
+    }
+
+   private static void handlePack(ByteBuf buf, Channel channel){
+        RPCCodec.Pack pack = RPCCodec.decodePack(channel, buf);
+        Byte serializeCode = pack.getSerializeCode();
+        Byte msgType = pack.getMsgType();
+
+        if(msgType.equals(RPCCodec.requestCode)){
+            RpcSerializer serializer = RpcSerializer.getSerializerByCode(serializeCode);
+            Request request = serializer.deSerialize(pack.getData(), Request.class);
+            request.setRqId(pack.getRqId());
+            request.setSerializeCode(pack.getSerializeCode());
+            Response response = filterChain.doFilter(request, channel, 0);
+            writeResponse(response, channel);
+            return;
+        }
+
+        if(msgType.equals(RPCCodec.pingCode)){
+            queueMap.get(channel).enqueue(RPCCodec.encodePingAckMsg(channel));
+            return;
+        }
+
+        if(msgType.equals(RPCCodec.pingAckCode)){
+            return;
+        }
+
+        channel.close();
+        throw new RpcException("错误消息类型!");
     }
 }

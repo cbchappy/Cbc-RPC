@@ -30,6 +30,8 @@ public class InvokeFilterChain {
 
     public static InvokeFilterChain createChain(){
         InvokeFilterChain chain = new InvokeFilterChain();
+
+        chain.addFilter(new ContextFilter());
         if(ClientConfig.TRACE){
             chain.addFilter(new TraceFilter());
         }

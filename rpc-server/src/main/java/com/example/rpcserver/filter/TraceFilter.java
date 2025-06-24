@@ -46,7 +46,6 @@ public class TraceFilter implements ServerFilter{
                 .build();
 
         Response response = chain.doFilter(request, channel, index);
-        span.setStatus(request.getTypeCode());
         span.setEndTime(System.nanoTime());
         span.setSuccess(true);
         if(!response.isSuccess()){

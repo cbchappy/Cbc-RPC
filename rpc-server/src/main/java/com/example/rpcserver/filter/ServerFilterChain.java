@@ -16,12 +16,12 @@ import java.util.List;
  * @Description
  */
 public class ServerFilterChain {
-    private List<ServerFilter> list = new ArrayList<>();
+    private final List<ServerFilter> list = new ArrayList<>();
     public Response doFilter(Request request, Channel channel, int index){
         if(index < list.size()){
             return list.get(index).doFilter(request, channel, this, index + 1);
         }
-        return RpcServer.handlerRequest(request, channel);
+        return RpcServer.handleRequest(request, channel);
     }
 
     public void addFilter(ServerFilter filter){
@@ -30,6 +30,7 @@ public class ServerFilterChain {
 
     public static ServerFilterChain createChain(){
         ServerFilterChain chain = new ServerFilterChain();
+        chain.addFilter(new RpcContextFilter());
        if(ServerConfig.TRACE){
            chain.addFilter(new TraceFilter());
        }

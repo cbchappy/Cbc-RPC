@@ -23,7 +23,7 @@ public class ClientConfig {
 
     public static Integer LOAD_BALANCE_CODE = 0; //负载均衡策略码 0 随机 1 轮询 2 权重 3最少调用
 
-    public static Integer SERIALIZER_TYPE_CODE = 3;//序列化策略码 0 java原始流 1 json 2 hessian  3 kryo
+    public static Integer SERIALIZER_TYPE_CODE = 2;//序列化策略码 0 java原始流 1 json 2 hessian  3 kryo
 
     public static Integer FAULT_TOLERANT_CODE = 0;//0 故障切换  1 并行调用
 
@@ -35,10 +35,12 @@ public class ClientConfig {
 
     public static Integer RETRY_NUM = 1;//开启重试策略后的最大重试次数
 
-    public static Integer OVERTIME = 10;//单个请求超时时间 单位为秒
+    public static Integer OVERTIME = 3;//单个请求超时时间 单位为秒
 
     public static Boolean MONITOR_LOG = true;//服务实例信息详细监控日志
 
     public static Boolean TRACE = false;
+
+    public static Integer READER_IDLE_TIME = 60;//单位秒
 
 }

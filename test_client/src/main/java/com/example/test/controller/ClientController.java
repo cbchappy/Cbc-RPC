@@ -1,11 +1,14 @@
 package com.example.test.controller;
 
+import com.example.rpccommon.RpcContext;
 import com.example.test.service.TestRpc;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 
 
 /**
@@ -18,12 +21,18 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class ClientController {
     @Autowired
-    @DubboReference
+//    @DubboReference
     private TestRpc testServer;
 
     @RequestMapping("")
-    public String get(){
-        log.debug("request");
+    public String get() throws Exception {
+//        CompletableFuture<String> future = RpcContext.asyncInvoke(new Callable<String>() {
+//            @Override
+//            public String call() throws Exception {
+//
+//            }
+//        });
+//        return future.get();
         return testServer.get();
     }
 

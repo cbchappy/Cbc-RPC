@@ -5,49 +5,51 @@ import com.example.rpcclient.config.ClientConfig;
 import com.example.rpcclient.constants.FaultTolerantCode;
 import com.example.rpcclient.filter.InvokeFilterChain;
 import com.example.rpcclient.handler.InboundHandler;
+import com.example.rpcclient.handler.ReadIdleStateEventHandler;
 import com.example.rpcclient.tolerant.Failover;
 import com.example.rpcclient.tolerant.FaultTolerant;
 import com.example.rpcclient.tolerant.Forking;
 import com.example.rpccommon.RpcContext;
-import com.example.rpccommon.config.ProtocolConfig;
-import com.example.rpccommon.constants.RpcMsgTypeCode;
-import com.example.rpccommon.message.PingAckMsg;
-import com.example.rpccommon.message.Request;
-import com.example.rpccommon.message.Response;
-import com.example.rpccommon.message.RpcMsg;
+import com.example.rpccommon.exception.RpcException;
+import com.example.rpccommon.message.*;
 import com.example.rpccommon.protocol.ProtocolFrameDecoder;
 import com.example.rpccommon.serializer.RpcSerializer;
-import com.example.rpccommon.util.BatchExecutorQueue;
+import com.example.rpccommon.util.MyBatchQueue;
+import com.example.rpccommon.util.RPCCodec;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.*;
 
 import static com.example.rpcclient.config.ClientConfig.FAULT_TOLERANT_CODE;
-import static com.example.rpcclient.config.ClientConfig.OVERTIME;
 
 /**
  * @Author Cbc
  * @DateTime 2025/5/18 16:29
- * @Description //todo 事件监听解决最少调用负载均衡后置处理问题
+ * @Description
  */
 @Slf4j
 public class InvokeServer {
 
-    public static ExecutorService shareExecutor = Executors.newCachedThreadPool();//共享线程池
-
     private static FaultTolerant FAULT_TOLERANT;//根据配置文件获取容错处理实例
 
-    private static ConcurrentHashMap<Integer, ThreadLessExecutor> exeMap = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Long, ThreadLessExecutor> exeMap = new ConcurrentHashMap<>();
+
+    private static final ConcurrentHashMap<Long, CompletableFuture<Object>> futureMap = new ConcurrentHashMap<>();
 
     private static InvokeFilterChain chain;
 
+    private static final ExecutorService shareExecutor = Executors.newCachedThreadPool();
+
+
     public static void initialize() {
+
         //初始化容错处理类
         if (FAULT_TOLERANT_CODE == FaultTolerantCode.RETRY) {
             FAULT_TOLERANT = new Failover();
@@ -74,32 +76,53 @@ public class InvokeServer {
     }
 
     public static Response doRemoteInvoke(Request request, InstanceWrapper instance) throws Throwable {
+        long over = (Long)request.getAttachment().get("term") - System.currentTimeMillis();
+        if(over < 0){
+            throw new RuntimeException("请求调用超时!");
+        }
+        //异步
+        if(RpcContext.getContext().get("async") != null){
+            CompletableFuture<Object> future = new CompletableFuture<>();
+            RpcContext context = RpcContext.getContext();
+            future = future.whenComplete((o, throwable) -> {
+                RpcContext.restoreContext(context, RpcContext.getContext());
+            });
+            futureMap.put(request.getRqId(), future);
+
+            //设置定时任务，防止内存泄露
+            RpcContext.getTimer().addTask(new Runnable() {
+                @Override
+                public void run() {
+                    CompletableFuture<Object> remove = futureMap.remove(request.getRqId());
+                    if(remove != null){
+                        remove.completeExceptionally(new RuntimeException("RPC调用超时!!"));
+                    }
+                }
+            }, over, TimeUnit.MILLISECONDS);
+
+            writeRequest(request, instance);
+            context.put("future", future);
+
+           return Response.builder()
+                    .res(future)
+                    .rqId(request.getRqId())
+                    .isAsync(true)
+                    .build();
+        }
 
 
+        //同步
         try {
             ThreadLessExecutor lessExecutor = new ThreadLessExecutor();
-            exeMap.put(request.getMsgId(), lessExecutor);
-            encodeAndWriteFlush(request, instance);
-
-            Long term = (Long) RpcContext.getContext().get("term");
-
-            if(term == null){
-                return (Response) lessExecutor.await(OVERTIME, TimeUnit.SECONDS);
-            }
-
-            long over = System.currentTimeMillis() - term;
-            if(over < 0){
-                throw new RuntimeException("请求调用超时!");
-            }
-
+            exeMap.put(request.getRqId(), lessExecutor);
+            writeRequest(request, instance);
             return (Response) lessExecutor.await(over, TimeUnit.MILLISECONDS);
-
         }catch (Exception e){
-            log.error("任务报错id:{}", request.getMsgId());
+            log.error("任务报错id:{}", request.getRqId());
             throw e;
         }
         finally {
-            exeMap.remove(request.getMsgId());
+            exeMap.remove(request.getRqId());
         }
     }
 
@@ -109,13 +132,13 @@ public class InvokeServer {
         Instance instance = wrapper.getInstance();
 
         Channel ch = wrapper.getChannel();
-        if (ch != null) {
+        if (ch != null &&  ch.isActive()) {
             return;
         }
 
         synchronized (wrapper.getLock()) {
             ch = wrapper.getChannel();
-            if (ch != null) {
+            if (ch != null && ch.isActive()) {
                 return;
             }
             NioEventLoopGroup worker = new NioEventLoopGroup(1);
@@ -126,6 +149,8 @@ public class InvokeServer {
                         @Override
                         protected void initChannel(NioSocketChannel ch) throws Exception {
                             ch.pipeline().addLast(new ProtocolFrameDecoder());//解码
+                            ch.pipeline().addLast(new IdleStateHandler(ClientConfig.READER_IDLE_TIME / 3, 0, 0, TimeUnit.SECONDS));
+                            ch.pipeline().addLast(new ReadIdleStateEventHandler());//读空闲处理器
                             ch.pipeline().addLast(new InboundHandler(wrapper));
                         }
                     })
@@ -137,94 +162,78 @@ public class InvokeServer {
                     .channel();
 
             wrapper.setChannel(ch);
-            wrapper.setQueue(new BatchExecutorQueue<>(ch));
+            wrapper.setQueue(new MyBatchQueue(ch));
 
         }
 
     }
 
-    public static void encodeAndWriteFlush(RpcMsg msg, InstanceWrapper wrapper) {
-        ByteBuf out = wrapper.getChannel().alloc().buffer();
-        //版本 1
-        out.writeByte(ProtocolConfig.getVersion());
-        //魔数 4
-        out.writeInt(ProtocolConfig.getMagic());
-        //消息类型 1
-        int msgTypeCode = msg.getTypeCode();
-        out.writeByte(msgTypeCode);
-        //额外信息码 1
-        out.writeByte(0);
-        //序列化方式 1
-        byte serializerTypeCode = ClientConfig.SERIALIZER_TYPE_CODE.byteValue();
-        out.writeByte(serializerTypeCode);
 
-        if (msgTypeCode != RpcMsgTypeCode.REQUEST) {
-            out.writeInt(0);
-            out.writeInt(0);
-            return;
-        }
-
-        //消息id 4
-        out.writeInt(((Request) msg).getMsgId());
-        RpcSerializer serializer = RpcSerializer.getSerializerByCode(serializerTypeCode);
-
-        byte[] bytes = serializer.serialize(msg);
-        //内容长度 4
-        out.writeInt(bytes.length);
-        out.writeBytes(bytes);
-
-        wrapper.getQueue().enqueue(out, wrapper.getChannel().eventLoop());
-
-//        channel.eventLoop().execute(() -> channel.writeAndFlush(out));
+    public static void writeRequest(Request request, InstanceWrapper wrapper){
+        ByteBuf buf = RPCCodec.encodeRequest(request, wrapper.getChannel());
+        wrapper.getQueue().enqueue(buf);
     }
 
+    public static void PackHandle(ByteBuf in, InstanceWrapper wrapper){
+        Channel channel = wrapper.getChannel();
+        RPCCodec.Pack pack = RPCCodec.decodePack(channel, in);
+        Byte msgType = pack.getMsgType();
 
-    public static void decodeAndHandler(ByteBuf in, InstanceWrapper wrapper) {
-        //版本 1
-        byte version = in.readByte();
-        //魔数 4
-        int magic = in.readInt();
-        //消息类型 1
-        byte msgTypeCode = in.readByte();//根据消息类型进行相应处理 1
-        //额外信息码 1
-        byte extra = in.readByte();
-        //序列化方式码 1
-        byte serializerTypeCode = in.readByte();// 1
-        //消息id
-        int msgId = in.readInt();
-
-        if (msgTypeCode == RpcMsgTypeCode.PING_ACK) {
-            //todo 更新空闲时间
-            in.release();
-            return;
-        } else if (msgTypeCode == RpcMsgTypeCode.PINGMSG) {
-            in.release();
-            encodeAndWriteFlush(new PingAckMsg(), wrapper);
+        if(msgType.equals(RPCCodec.responseCode)){
+            Long rqId = pack.getRqId();
+            if(exeMap.containsKey(rqId)){
+                threadLessHandle(pack);
+            } else if (futureMap.containsKey(rqId)) {
+               futureHandle(pack);
+            }
             return;
         }
+        if(msgType.equals(RPCCodec.pingCode)){
+            ByteBuf buf = RPCCodec.encodePingAckMsg(channel);
+            wrapper.getQueue().enqueue(buf);
+            return;
+        }
+
+        if(msgType.equals(RPCCodec.pingAckCode)){
+            return;
+        }
+
+        channel.close();
+        throw new RpcException("错误消息类型!");
+    }
+
+    private static void threadLessHandle(RPCCodec.Pack pack){
 
         Callable<Object> callable = () -> {
-            //长度 4
-            int len = in.readInt();
 
-            byte[] bytes = new byte[len];
-            in.readBytes(bytes, 0, len);
+            byte[] bytes = pack.getData();
 
-            RpcSerializer serializer = RpcSerializer.getSerializerByCode(serializerTypeCode);
-            Class<?> aClass = RpcMsg.getClassByTypeCode(msgTypeCode);
-            Object o = serializer.deSerialize(bytes, aClass);
+            RpcSerializer serializer = RpcSerializer.getSerializerByCode(pack.getSerializeCode());
 
-            in.release();
-
-            return o;
+            return serializer.deSerialize(bytes, Response.class);
         };
 
-        ThreadLessExecutor lessExecutor = exeMap.remove(msgId);
+        ThreadLessExecutor lessExecutor = exeMap.remove(pack.getRqId());
         if (lessExecutor != null) {
             lessExecutor.aware(callable);
         }else {
-            log.error("过期任务id：{}", msgId);
+            log.error("过期任务id：{}", pack.getRqId());
         }
+    }
+
+    private static void futureHandle(RPCCodec.Pack pack){
+
+        Runnable runnable = () -> {
+            CompletableFuture<Object> future = futureMap.remove(pack.getRqId());
+            byte[] bytes = pack.getData();
+
+            RpcSerializer serializer = RpcSerializer.getSerializerByCode(pack.getSerializeCode());
+            Response response = serializer.deSerialize(bytes, Response.class);
+            future.complete(response);
+        };
+
+        shareExecutor.execute(runnable);
+
     }
 
 

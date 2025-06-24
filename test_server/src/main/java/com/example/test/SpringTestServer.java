@@ -1,7 +1,7 @@
 package com.example.test;
 
 
-import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
+import com.example.server.spring.annotation.StartRpcServer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -11,8 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @Description
  */ //Netty4BatchWriteQueue
 @SpringBootApplication
-@EnableDubbo
-//@StartRpcServer(values = {"com.example.test.service"})
+//@EnableDubbo
+@StartRpcServer(values = {"com.example.test.service"})
 //@RpcClientScan(values = {"com.example.test.service"})
 public class SpringTestServer {
     public static void main(String[] args) {

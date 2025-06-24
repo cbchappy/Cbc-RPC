@@ -32,29 +32,6 @@
 - 使用了多种锁机制, 保证服务的并发安全
 - 多种配置参数, 用户可以根据软件环境配置合适的参数
 
-## 自定义rpc协议
-```
-+---------------+---------------+-----------------+
-|  Magic Number | Version Number| Package Type    | 
-|    4 byte     |    1 byte     |     1 bytes     | 
-+---------------+---------------+-----------------+
-|Serializer Type|    Align fill |   DataLength    |     
-|     1 byte    |     1 byte    |       4 byte    |                     
-+-------------------------------------------------+   
-|               Data bytes                        |  
-|           (length = DataLength)                 |  
-+-------------------------------------------------+                                               
-```
-|       名字        |         解释          |
-|:---------------:|:-------------------:|                         
-|  Magic Number   |  魔数, 表明这是自定义的rpc协议  |
-| Version Number  |    版本号, rpc协议的版本    |  
-|  Package Type   |       消息包的类型        |
- | Serializer Type |      采用的序列化方式       |
-  |   Align fill    |     对齐填充, 加快读取      | 
-  |   DataLength    |       消息内容的长度       |
-|   Data bytes    | 消息内容, 长度为DataLength |  
-
 ## 快速上手
 
 ### 软件使用环境

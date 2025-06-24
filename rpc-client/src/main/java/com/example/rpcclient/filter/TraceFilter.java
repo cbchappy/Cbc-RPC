@@ -15,6 +15,7 @@ import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
 /**
  * @Author Cbc
@@ -35,6 +36,7 @@ public class TraceFilter implements InvokeFilter{
         if(traceId == null || parentSpanId == null){
             traceId = RpcUtils.createTraceId();
             parentSpanId = null;
+            context.put("traceId", traceId);
         }else {
             context.put("use", true);
             request.setRetryNum(0);
@@ -42,44 +44,65 @@ public class TraceFilter implements InvokeFilter{
 
 
         String spanId = RpcUtils.generateSpanId(parentSpanId);
-
-        Long term = (Long) context.get("term");
+        context.put("spanId", spanId);
         attachment.put("traceId", traceId);
         attachment.put("spanId", spanId);
-        attachment.put("term",term == null ? System.currentTimeMillis() + ClientConfig.OVERTIME * 1000 : term);
+
 
         Response response = chain.doFilter(wrapper, request, index);
-        if(!response.isSuccess() && !response.getStatus().equals(ResponseStatus.MOCK.code) && request.getRetryNum() > 0){
+        if(!response.isAsync() && !response.isSuccess() && !response.getStatus().equals(ResponseStatus.MOCK.code) && request.getRetryNum() > 0){
             return response;
         }
-        Span span = Span.builder()
-                .traceId(traceId)
-                .parentSpanId(parentSpanId)
-                .spanId(spanId)
-                .interfaceName(request.getInterfaceName())
-                .methodName(request.getMethodName())
-                .argsClassNames(request.getArgsClassNames())
-                .isServer(false)
-                .type(parentSpanId == null ? 0 : 2)
-                .startTime(System.nanoTime())
-                .build();
 
-
-        span.setStatus(request.getTypeCode());
-        span.setEndTime(System.nanoTime());
-        span.setSuccess(true);
-        if(!response.isSuccess()){
-            span.setSuccess(false);
-            Throwable throwable = response.getThrowable();
-            if(throwable != null){
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                PrintStream printStream = new PrintStream(outputStream);
-                throwable.printStackTrace(printStream);
-                span.setExceptionMsg(outputStream.toString());
-            }
+        if(response.isAsync()){
+            CompletableFuture<?> future = (CompletableFuture<?>) response.getRes();
+           future = future.whenComplete((BiConsumer<Object, Throwable>) (o, throwable) -> {
+                new TraceRunnable((Response) o, request).run();
+            });
+            response.setRes(future);
+        }else {
+            new TraceRunnable(response, request).run();
         }
 
-        SpanReportClient.report(span);
         return response;
     }
+
+    private record TraceRunnable(Response response, Request request) implements Runnable {
+
+        @Override
+            public void run() {
+                RpcContext context = RpcContext.getContext();
+                String trId = (String) context.get("traceId");
+                String spId = (String) context.get("spanId");
+                String prSpanId = (String) context.get("parentSpanId");
+                Span span = Span.builder()
+                        .traceId(trId)
+                        .parentSpanId(prSpanId)
+                        .spanId(spId)
+                        .interfaceName(request.getInterfaceName())
+                        .methodName(request.getMethodName())
+                        .argsClassNames(request.getArgsClassNames())
+                        .isServer(false)
+                        .type(prSpanId == null ? 0 : 2)
+                        .startTime(System.nanoTime())
+                        .build();
+
+
+
+                span.setEndTime(System.nanoTime());
+                span.setSuccess(true);
+                if (!response.isSuccess()) {
+                    span.setSuccess(false);
+                    Throwable throwable = response.getThrowable();
+                    if (throwable != null) {
+                        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                        PrintStream printStream = new PrintStream(outputStream);
+                        throwable.printStackTrace(printStream);
+                        span.setExceptionMsg(outputStream.toString());
+                    }
+                }
+
+                SpanReportClient.report(span);
+            }
+        }
 }

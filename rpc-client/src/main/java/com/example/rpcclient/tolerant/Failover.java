@@ -28,6 +28,9 @@ public class Failover implements FaultTolerant{
                     response  = InvokeServer.doFilterAndGet(request, wrapper);
                     status = response.getStatus();
 
+                    if(response.isAsync()){
+                        return response.getRes();
+                    }
                     if(!response.isSuccess()){
                         if(response.getStatus().equals(ResponseStatus.MOCK.code)){
                             return response.getRes();

@@ -1,25 +1,26 @@
 
-spring:
-  application:
-    name: dubbo-consumer-demo
+#spring:
+#  application:
+#    name: dubbo-consumer-demo
+#
+#dubbo:
+#  application:
+#    name: dubbo-consumer-demo
+#  registry:
+#    address: nacos://localhost:8848
+#    parameters:
+#      namespace: public    # 需与Provider一致
+#  consumer:
+#    check: false   # 启动时不强制检查Provider是否可用
+#    timeout: 1000000000 # 调用超时时间（毫秒）
 
-dubbo:
-  application:
-    name: dubbo-consumer-demo
-  registry:
-    address: nacos://localhost:8848
-    parameters:
-      namespace: public    # 需与Provider一致
-  consumer:
-    check: false   # 启动时不强制检查Provider是否可用
-    timeout: 10000000 # 调用超时时间（毫秒）
 
 server:
   port: 8081
   tomcat:
     threads:
       max: 40
-    max-connections: 1000000
+    max-connections: 100000
 #cbc:
 #  rpc:
 #    nacos:

@@ -18,7 +18,7 @@ public class LimiterFilter implements ServerFilter{
         if(!limiter.tryAcquire(1)){
             return Response.builder()
                     .status(ResponseStatus.LIMITER.code)
-                    .msgId(request.getMsgId())
+                    .rqId(request.getRqId())
                     .build();
         }
         return chain.doFilter(request, channel, index);
